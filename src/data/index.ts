@@ -1,5 +1,6 @@
 import type { DataClient } from './types';
 import { MockDataClient } from './mockClient';
+import { SupabaseDataClient } from './supabaseClient';
 
 export function isMockMode(): boolean {
   const url = import.meta.env.VITE_SUPABASE_URL;
@@ -8,8 +9,13 @@ export function isMockMode(): boolean {
   return useMock === 'true' || !url || !anonKey;
 }
 
-// In Milestone 1, this always builds a MockDataClient.
-// Milestone 2 will integrate the Supabase client when credentials are present.
 export function createDataClient(passcode: string): DataClient {
-  return new MockDataClient(passcode);
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  if (isMockMode()) {
+    return new MockDataClient(passcode);
+  }
+
+  return new SupabaseDataClient(url, anonKey, passcode);
 }
