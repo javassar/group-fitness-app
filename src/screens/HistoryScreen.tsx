@@ -62,14 +62,45 @@ export function HistoryScreen({
     await onClearDayLog(date);
   };
 
-  const loggedCount = logs.filter((l) => l.status === 'worked_out').length;
-  const monthTitle = new Date(
-    Date.UTC(currentYear, parseInt(todayDate.slice(5, 7), 10) - 1, 1)
-  ).toLocaleDateString('en-US', {
-    timeZone: 'UTC',
-    month: 'long',
-    year: 'numeric',
-  }).toUpperCase();
+  interface MonthGroup {
+    monthKey: string;
+    monthTitle: string;
+    monthLoggedCount: number;
+    dates: string[];
+  }
+
+  // Group displayed dates into chronological monthly sections (newest first)
+  const monthGroups: MonthGroup[] = [];
+  let currentGroup: MonthGroup | null = null;
+
+  for (const date of displayedDates) {
+    const monthKey = date.slice(0, 7); // "YYYY-MM"
+    if (!currentGroup || currentGroup.monthKey !== monthKey) {
+      const [yStr, mStr] = monthKey.split('-');
+      const yearNum = parseInt(yStr, 10);
+      const monthNum = parseInt(mStr, 10);
+      const monthTitle = new Date(Date.UTC(yearNum, monthNum - 1, 1))
+        .toLocaleDateString('en-US', {
+          timeZone: 'UTC',
+          month: 'long',
+          year: 'numeric',
+        })
+        .toUpperCase();
+
+      const monthLoggedCount = logs.filter(
+        (l) => l.date.startsWith(monthKey) && l.status === 'worked_out'
+      ).length;
+
+      currentGroup = {
+        monthKey,
+        monthTitle,
+        monthLoggedCount,
+        dates: [],
+      };
+      monthGroups.push(currentGroup);
+    }
+    currentGroup.dates.push(date);
+  }
 
   return (
     <div className="screen-content">
@@ -103,78 +134,84 @@ export function HistoryScreen({
         </div>
       </div>
 
-      <div className="ledger-summary-header">
-        <span className="ledger-summary-title">{monthTitle}</span>
-        <span className="ledger-summary-sub">{loggedCount} logged this year</span>
-      </div>
-
-      <div className="history-ledger" role="list">
-        {displayedDates.length === 0 ? (
+      {displayedDates.length === 0 ? (
+        <div className="history-ledger" role="list">
           <div className="empty-history-notice">
             {onlyUnlogged ? 'No unlogged days found!' : 'No entries to display.'}
           </div>
-        ) : (
-          displayedDates.map((date) => {
-            const log = logsMap.get(date);
-            const isExpanded = isSelf && expandedDate === date;
-            const isWorkedOut = log?.status === 'worked_out';
-            const isNoWorkout = log?.status === 'no_workout';
+        </div>
+      ) : (
+        monthGroups.map((group) => (
+          <section key={group.monthKey} className="history-month-section" aria-label={group.monthTitle}>
+            <div className="ledger-summary-header">
+              <span className="ledger-summary-title">{group.monthTitle}</span>
+              <span className="ledger-summary-sub">{group.monthLoggedCount} logged</span>
+            </div>
 
-            return (
-              <div
-                key={date}
-                className={`ledger-item-container ${isExpanded ? 'is-expanded' : ''}`}
-              >
-                <button
-                  type="button"
-                  className={`ledger-row ${isSelf ? 'is-interactive' : 'is-readonly'}`}
-                  onClick={() => handleRowClick(date)}
-                  aria-expanded={isSelf ? isExpanded : undefined}
-                  aria-label={`${formatDateShort(date)}: ${isWorkedOut ? 'Logged' : isNoWorkout ? 'Rest' : 'Unlogged'}${log?.note ? `, note: ${log.note}` : ''}`}
-                >
-                  <div className="ledger-row-left">
-                    <span
-                      className={`ledger-dot ${isWorkedOut ? 'is-logged' : isNoWorkout ? 'is-rest' : 'is-unlogged'}`}
-                      aria-hidden="true"
-                    />
-                    <span className="ledger-date">{formatDateShort(date)}</span>
+            <div className="history-ledger" role="list">
+              {group.dates.map((date) => {
+                const log = logsMap.get(date);
+                const isExpanded = isSelf && expandedDate === date;
+                const isWorkedOut = log?.status === 'worked_out';
+                const isNoWorkout = log?.status === 'no_workout';
+
+                return (
+                  <div
+                    key={date}
+                    className={`ledger-item-container ${isExpanded ? 'is-expanded' : ''}`}
+                  >
+                    <button
+                      type="button"
+                      className={`ledger-row ${isSelf ? 'is-interactive' : 'is-readonly'}`}
+                      onClick={() => handleRowClick(date)}
+                      aria-expanded={isSelf ? isExpanded : undefined}
+                      aria-label={`${formatDateShort(date)}: ${isWorkedOut ? 'Logged' : isNoWorkout ? 'Rest' : 'Unlogged'}${log?.note ? `, note: ${log.note}` : ''}`}
+                    >
+                      <div className="ledger-row-left">
+                        <span
+                          className={`ledger-dot ${isWorkedOut ? 'is-logged' : isNoWorkout ? 'is-rest' : 'is-unlogged'}`}
+                          aria-hidden="true"
+                        />
+                        <span className="ledger-date">{formatDateShort(date)}</span>
+                      </div>
+
+                      <div className="ledger-row-right">
+                        {isWorkedOut && (
+                          <span className="ledger-badge is-logged">
+                            <CheckIcon size={13} />
+                            <span>Logged</span>
+                          </span>
+                        )}
+                        {isNoWorkout && (
+                          <span className="ledger-badge is-rest">Rest</span>
+                        )}
+                        {!log && (
+                          <span className="ledger-unlogged-dash">—</span>
+                        )}
+                      </div>
+                    </button>
+
+                    {log?.note && (
+                      <div className="ledger-row-note">{log.note}</div>
+                    )}
+
+                    {isExpanded && (
+                      <DayEditor
+                        date={date}
+                        currentStatus={log?.status ?? null}
+                        initialNote={log?.note ?? null}
+                        isSaving={isSaving}
+                        onSave={(status, note) => handleSave(date, status, note)}
+                        onClear={() => handleClear(date)}
+                      />
+                    )}
                   </div>
-
-                  <div className="ledger-row-right">
-                    {isWorkedOut && (
-                      <span className="ledger-badge is-logged">
-                        <CheckIcon size={13} />
-                        <span>Logged</span>
-                      </span>
-                    )}
-                    {isNoWorkout && (
-                      <span className="ledger-badge is-rest">Rest</span>
-                    )}
-                    {!log && (
-                      <span className="ledger-unlogged-dash">—</span>
-                    )}
-                  </div>
-                </button>
-
-                {log?.note && (
-                  <div className="ledger-row-note">{log.note}</div>
-                )}
-
-                {isExpanded && (
-                  <DayEditor
-                    date={date}
-                    currentStatus={log?.status ?? null}
-                    initialNote={log?.note ?? null}
-                    isSaving={isSaving}
-                    onSave={(status, note) => handleSave(date, status, note)}
-                    onClear={() => handleClear(date)}
-                  />
-                )}
-              </div>
-            );
-          })
-        )}
-      </div>
+                );
+              })}
+            </div>
+          </section>
+        ))
+      )}
     </div>
   );
 }

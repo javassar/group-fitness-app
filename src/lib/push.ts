@@ -19,7 +19,8 @@ export async function getExistingSubscription(): Promise<PushSubscription | null
     return null;
   }
   try {
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (!registration) return null;
     return await registration.pushManager.getSubscription();
   } catch {
     return null;
@@ -27,7 +28,7 @@ export async function getExistingSubscription(): Promise<PushSubscription | null
 }
 
 export async function subscribeToPush(vapidPublicKey: string): Promise<PushSubscription> {
-  if (typeof window === 'undefined' || !('Notification' in window)) {
+  if (typeof window === 'undefined' || !('Notification' in window) || !('serviceWorker' in navigator)) {
     throw new Error('Notifications are not supported on this device.');
   }
 
@@ -36,7 +37,11 @@ export async function subscribeToPush(vapidPublicKey: string): Promise<PushSubsc
     throw new Error('Notification permission was not granted.');
   }
 
-  const registration = await navigator.serviceWorker.ready;
+  let registration = await navigator.serviceWorker.getRegistration();
+  if (!registration) {
+    registration = await navigator.serviceWorker.register('/sw.js');
+  }
+  await navigator.serviceWorker.ready;
   const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
 
   return await registration.pushManager.subscribe({

@@ -54,6 +54,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
@@ -200,6 +201,7 @@ input {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding-bottom: calc(128px + env(safe-area-inset-bottom, 0px)); /* pb-32 dock clearance */
 }
 
 /* Centered Screen (Passcode, Name Picker, Loading) */
@@ -474,11 +476,13 @@ input {
   line-height: 1;
 }
 
-/* 3-4px tall progress bar track */
+/* 4px tall sunken progress bar track */
 .progress-bar-track {
   width: 100%;
   height: 4px;
-  background-color: #281216;
+  background-color: #261015;
+  border: 1px solid rgba(100, 13, 20, 0.45);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
   border-radius: 9999px;
   overflow: hidden;
   margin-top: 6px;
@@ -617,17 +621,17 @@ input {
   }
 }
 
-/* Rest/Unlogged past day: soft hollow crimson/gray circle */
+/* Rest/Unlogged past day: crisp subtle oxblood ring */
 .week-dot.is-missed {
-  background-color: transparent;
-  border: 1.5px solid #4D1A22;
+  background-color: rgba(82, 28, 36, 0.25);
+  border: 1.5px solid #521C24;
 }
 
-/* Future days: faint dotted circle */
+/* Future days: subtle oxblood ring */
 .week-dot.is-future {
   background-color: transparent;
-  border: 1.5px dotted #4D1A22;
-  opacity: 0.4;
+  border: 1.5px solid #521C24;
+  opacity: 0.85;
 }
 
 /* Day letter labels */
@@ -680,6 +684,11 @@ input {
   transform: translateY(-1px);
   border-color: rgba(173, 40, 49, 0.6);
   color: #F5EBE6;
+}
+
+.btn-choice:active:not(:disabled) .btn-circle {
+  transform: scale(0.97);
+  transition: transform 100ms ease;
 }
 
 .btn-choice-label {
@@ -758,13 +767,14 @@ input {
 }
 
 .btn-clear-text {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 0.75rem;
-  letter-spacing: 0.02em;
-  color: #A38F90;
+  font-weight: 500;
+  letter-spacing: normal;
+  color: #71717A;
   text-decoration: none;
   padding: 6px 12px;
-  min-height: 36px;
+  min-height: 32px;
   display: inline-flex;
   align-items: center;
   transition: color 0.15s ease;
@@ -847,6 +857,13 @@ input {
   border-color: #AD2831;
   color: #F5EBE6;
   box-shadow: 0 2px 8px rgba(173, 40, 49, 0.4);
+}
+
+.history-month-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 12px;
 }
 
 .ledger-summary-header {
@@ -1289,7 +1306,7 @@ input {
 /* 5. Floating Bottom Navigation: Obsidian glass dock with arterial crimson active pill */
 .tab-bar {
   position: fixed;
-  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 32px);

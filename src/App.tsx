@@ -184,6 +184,13 @@ export function App() {
 
   // Sign out / switch member
   const handleNotYou = async () => {
+    // Immediately clear stored member state so the UI switches to the Name Picker with zero lag
+    clearStoredMemberId();
+    setMemberId(null);
+    setHistoryViewingMemberId(null);
+    setActiveTab('today');
+
+    // Clean up push notification subscription in the background (non-blocking)
     try {
       const endpoint = await unsubscribeFromPush();
       if (endpoint) {
@@ -192,10 +199,6 @@ export function App() {
     } catch {
       // Continue even if unsubscribe fails
     }
-    clearStoredMemberId();
-    setMemberId(null);
-    setHistoryViewingMemberId(null);
-    setActiveTab('today');
   };
 
   // Open a specific member's History tab

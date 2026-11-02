@@ -33,6 +33,13 @@ export function TodayCard({
 
   const handleStatusClick = async (status: DayStatus) => {
     if (isSaving) return;
+    if (status === 'worked_out' && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(20);
+      } catch {
+        // Ignore if vibration is blocked or unsupported on the device
+      }
+    }
     const sanitizedNote = note.trim().slice(0, 200);
     await onSave(status, sanitizedNote.length > 0 ? sanitizedNote : null);
   };
