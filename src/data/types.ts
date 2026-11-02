@@ -23,6 +23,17 @@ export interface GroupStatsRow {
   todayStatus: DayStatus | null; // null if today is unlogged or memberToday is outside the year
 }
 
+export type GoalType = 'days' | 'percent';
+export interface Goal { type: GoalType; value: number }
+export interface MemberGoal { memberId: string; goal: Goal; changeCount: number }
+export interface GoalChange {
+  memberId: string;
+  memberName: string;
+  oldGoal: Goal;
+  newGoal: Goal;
+  changedAt: string; // ISO timestamp
+}
+
 export interface DataClient {
   checkPasscode(passcode: string): Promise<boolean>;
   listMembers(): Promise<Member[]>;
@@ -35,4 +46,7 @@ export interface DataClient {
   removePushSubscription(endpoint: string): Promise<void>;
   getReminderSettings(memberId: string): Promise<{ pausedUntil: string | null }>;
   setRemindersPausedUntil(memberId: string, date: string | null): Promise<void>;
+  getGoals(year: number): Promise<MemberGoal[]>;
+  setGoal(memberId: string, year: number, goal: Goal): Promise<void>;
+  getGoalChanges(year: number): Promise<GoalChange[]>;
 }

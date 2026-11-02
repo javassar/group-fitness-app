@@ -32,3 +32,9 @@ Jackie is new to web development and strong in math and statistics. She wants to
 - Never write VAPID_PRIVATE_KEY, CRON_SECRET, or any other secret value into any file, log, test, or commit. They live only in Vercel's environment settings, which Jackie sets herself. Do not ask her to paste them to you.
 - Files in api/ run only on Vercel. Do not install the Vercel CLI or run vercel dev. Verify with npm run build and npm test, and ask Jackie to test the deployed site on her iPhone.
 - Jackie pushes to GitHub herself. After each push Vercel deploys. Ask her to report what she sees on her phone, and to paste Vercel log output (with secrets removed) if something fails.
+
+## Additions for SPEC-3.md (milestones 8 to 10)
+
+- The build spec for milestones 8 to 10 is SPEC-3.md. SPEC.md and SPEC-2.md still apply. No new dependencies are allowed in this stage.
+- The database validates goal values only. The typed-passage friction lives in the browser by design. Do not try to enforce it on the server.
+- VITE_GOALS_START_YEAR is for local testing only. Never add it to Vercel or to any committed file.

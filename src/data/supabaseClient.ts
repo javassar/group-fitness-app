@@ -1,5 +1,15 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { DataClient, DayLog, DayStatus, GroupStatsRow, Member } from './types';
+import type {
+  DataClient,
+  DayLog,
+  DayStatus,
+  Goal,
+  GoalChange,
+  GoalType,
+  GroupStatsRow,
+  Member,
+  MemberGoal,
+} from './types';
 
 interface MemberRow {
   id: string;
@@ -201,5 +211,74 @@ export class SupabaseDataClient implements DataClient {
     if (error) {
       throw new Error(error.message);
     }
+  }
+
+  async getGoals(year: number): Promise<MemberGoal[]> {
+    const { data, error } = await this.client.rpc('get_goals', {
+      p_passcode: this.passcode,
+      p_year: year,
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
+    interface GoalDbRow {
+      member_id: string;
+      goal_type: GoalType;
+      goal_value: number;
+      change_count: number;
+    }
+    return ((data as GoalDbRow[]) || []).map((row) => ({
+      memberId: row.member_id,
+      goal: {
+        type: row.goal_type,
+        value: Number(row.goal_value),
+      },
+      changeCount: Number(row.change_count),
+    }));
+  }
+
+  async setGoal(memberId: string, year: number, goal: Goal): Promise<void> {
+    const { error } = await this.client.rpc('set_goal', {
+      p_passcode: this.passcode,
+      p_member_id: memberId,
+      p_year: year,
+      p_goal_type: goal.type,
+      p_goal_value: goal.value,
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  async getGoalChanges(year: number): Promise<GoalChange[]> {
+    const { data, error } = await this.client.rpc('get_goal_changes', {
+      p_passcode: this.passcode,
+      p_year: year,
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
+    interface GoalChangeDbRow {
+      member_id: string;
+      member_name: string;
+      old_goal_type: GoalType;
+      old_goal_value: number;
+      new_goal_type: GoalType;
+      new_goal_value: number;
+      changed_at: string;
+    }
+    return ((data as GoalChangeDbRow[]) || []).map((row) => ({
+      memberId: row.member_id,
+      memberName: row.member_name,
+      oldGoal: {
+        type: row.old_goal_type,
+        value: Number(row.old_goal_value),
+      },
+      newGoal: {
+        type: row.new_goal_type,
+        value: Number(row.new_goal_value),
+      },
+      changedAt: row.changed_at,
+    }));
   }
 }

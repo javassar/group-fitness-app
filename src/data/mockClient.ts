@@ -1,4 +1,13 @@
-import type { DataClient, DayLog, DayStatus, GroupStatsRow, Member } from './types';
+import type {
+  DataClient,
+  DayLog,
+  DayStatus,
+  Goal,
+  GoalChange,
+  GroupStatsRow,
+  Member,
+  MemberGoal,
+} from './types';
 import { deviceTimeZone, getDateRangeDescending, todayLocal } from '../lib/dates';
 
 // Simple deterministic Linear Congruential Generator (LCG) pseudo-random function.
@@ -19,6 +28,9 @@ export class MockDataClient implements DataClient {
   private members: Member[];
   // Key format: `${memberId}:${date}`
   private logs: Map<string, DayLog> = new Map();
+  // Key format: `${memberId}:${year}`
+  private memberGoals: Map<string, { goal: Goal; changeCount: number }> = new Map();
+  private goalChanges: (GoalChange & { year: number })[] = [];
 
   constructor(passcode: string) {
     this.passcode = passcode;
@@ -208,5 +220,62 @@ export class MockDataClient implements DataClient {
   async setRemindersPausedUntil(memberId: string, date: string | null): Promise<void> {
     this.assertPasscode();
     this.pausedDates.set(memberId, date);
+  }
+
+  async getGoals(year: number): Promise<MemberGoal[]> {
+    this.assertPasscode();
+    const results: MemberGoal[] = [];
+    for (const member of this.members) {
+      const stored = this.memberGoals.get(`${member.id}:${year}`);
+      if (stored) {
+        results.push({
+          memberId: member.id,
+          goal: { ...stored.goal },
+          changeCount: stored.changeCount,
+        });
+      }
+    }
+    return results;
+  }
+
+  async setGoal(memberId: string, year: number, goal: Goal): Promise<void> {
+    this.assertPasscode();
+    const member = this.members.find((m) => m.id === memberId);
+    if (!member) {
+      throw new Error('unknown member');
+    }
+    const key = `${memberId}:${year}`;
+    const existing = this.memberGoals.get(key);
+
+    if (existing) {
+      if (existing.goal.type === goal.type && existing.goal.value === goal.value) {
+        return;
+      }
+      const oldGoal = { ...existing.goal };
+      existing.goal = { ...goal };
+      existing.changeCount += 1;
+
+      this.goalChanges.unshift({
+        memberId,
+        memberName: member.name,
+        oldGoal,
+        newGoal: { ...goal },
+        changedAt: new Date().toISOString(),
+        year,
+      });
+    } else {
+      this.memberGoals.set(key, {
+        goal: { ...goal },
+        changeCount: 0,
+      });
+    }
+  }
+
+  async getGoalChanges(year: number): Promise<GoalChange[]> {
+    this.assertPasscode();
+    return this.goalChanges
+      .filter((c) => c.year === year)
+      .slice(0, 20)
+      .map(({ year: _y, ...rest }) => rest);
   }
 }
