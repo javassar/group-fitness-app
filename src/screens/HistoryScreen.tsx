@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { DayLog, DayStatus, Member } from '../data/types';
 import { formatDateShort, getDateRangeDescending } from '../lib/dates';
-import { ArrowLeftIcon } from '../components/Icons';
+import { ArrowLeftIcon, CheckIcon } from '../components/Icons';
 import { DayEditor } from '../components/DayEditor';
 
 interface HistoryScreenProps {
@@ -62,38 +62,53 @@ export function HistoryScreen({
     await onClearDayLog(date);
   };
 
+  const loggedCount = logs.filter((l) => l.status === 'worked_out').length;
+  const monthTitle = new Date(
+    Date.UTC(currentYear, parseInt(todayDate.slice(5, 7), 10) - 1, 1)
+  ).toLocaleDateString('en-US', {
+    timeZone: 'UTC',
+    month: 'long',
+    year: 'numeric',
+  }).toUpperCase();
+
   return (
     <div className="screen-content">
       <div className="history-header">
-        {!isSelf ? (
-          <div className="history-nav-back">
-            <button
-              type="button"
-              className="btn-back"
-              onClick={onBackToSelf}
-              aria-label="Back to your log"
-            >
-              <ArrowLeftIcon size={18} />
-              <span>Back</span>
-            </button>
-            <h1 className="history-title">{viewingMember.name}&apos;s log</h1>
-          </div>
-        ) : (
-          <h1 className="history-title">Your log</h1>
-        )}
+        <div className="history-header-top">
+          {!isSelf ? (
+            <div className="history-nav-back">
+              <button
+                type="button"
+                className="btn-back"
+                onClick={onBackToSelf}
+                aria-label="Back to your log"
+              >
+                <ArrowLeftIcon size={18} />
+                <span>Back</span>
+              </button>
+              <h1 className="history-title">{viewingMember.name}&apos;s log</h1>
+            </div>
+          ) : (
+            <h1 className="history-title">Training log</h1>
+          )}
 
-        <label className="filter-toggle-label">
-          <input
-            type="checkbox"
-            className="filter-checkbox"
-            checked={onlyUnlogged}
-            onChange={(e) => setOnlyUnlogged(e.target.checked)}
-          />
-          <span>Only unlogged days</span>
-        </label>
+          <button
+            type="button"
+            className={`filter-pill-btn ${onlyUnlogged ? 'is-active' : ''}`}
+            onClick={() => setOnlyUnlogged((prev) => !prev)}
+            aria-pressed={onlyUnlogged}
+          >
+            <span>Only unlogged</span>
+          </button>
+        </div>
       </div>
 
-      <div className="history-list" role="list">
+      <div className="ledger-summary-header">
+        <span className="ledger-summary-title">{monthTitle}</span>
+        <span className="ledger-summary-sub">{loggedCount} logged this year</span>
+      </div>
+
+      <div className="history-ledger" role="list">
         {displayedDates.length === 0 ? (
           <div className="empty-history-notice">
             {onlyUnlogged ? 'No unlogged days found!' : 'No entries to display.'}
@@ -102,42 +117,48 @@ export function HistoryScreen({
           displayedDates.map((date) => {
             const log = logsMap.get(date);
             const isExpanded = isSelf && expandedDate === date;
-
-            let statusLabel = 'Not logged';
-            let statusClass = 'status-not-logged';
-            if (log?.status === 'worked_out') {
-              statusLabel = 'Worked out';
-              statusClass = 'status-worked-out';
-            } else if (log?.status === 'no_workout') {
-              statusLabel = 'No workout';
-              statusClass = 'status-no-workout';
-            }
+            const isWorkedOut = log?.status === 'worked_out';
+            const isNoWorkout = log?.status === 'no_workout';
 
             return (
               <div
                 key={date}
-                className={`history-row-container ${isExpanded ? 'is-expanded' : ''}`}
+                className={`ledger-item-container ${isExpanded ? 'is-expanded' : ''}`}
               >
                 <button
                   type="button"
-                  className={`history-row ${isSelf ? 'is-interactive' : 'is-readonly'}`}
+                  className={`ledger-row ${isSelf ? 'is-interactive' : 'is-readonly'}`}
                   onClick={() => handleRowClick(date)}
                   aria-expanded={isSelf ? isExpanded : undefined}
-                  aria-label={`${formatDateShort(date)}: ${statusLabel}${log?.note ? `, note: ${log.note}` : ''}`}
+                  aria-label={`${formatDateShort(date)}: ${isWorkedOut ? 'Logged' : isNoWorkout ? 'Rest' : 'Unlogged'}${log?.note ? `, note: ${log.note}` : ''}`}
                 >
-                  <div className="history-row-main">
-                    <span className="history-date">{formatDateShort(date)}</span>
-                    <span className={`status-chip ${statusClass}`}>
-                      {statusLabel}
-                    </span>
+                  <div className="ledger-row-left">
+                    <span
+                      className={`ledger-dot ${isWorkedOut ? 'is-logged' : isNoWorkout ? 'is-rest' : 'is-unlogged'}`}
+                      aria-hidden="true"
+                    />
+                    <span className="ledger-date">{formatDateShort(date)}</span>
                   </div>
 
-                  {log?.note && (
-                    <div className="history-row-note">
-                      {log.note}
-                    </div>
-                  )}
+                  <div className="ledger-row-right">
+                    {isWorkedOut && (
+                      <span className="ledger-badge is-logged">
+                        <CheckIcon size={13} />
+                        <span>Logged</span>
+                      </span>
+                    )}
+                    {isNoWorkout && (
+                      <span className="ledger-badge is-rest">Rest</span>
+                    )}
+                    {!log && (
+                      <span className="ledger-unlogged-dash">—</span>
+                    )}
+                  </div>
                 </button>
+
+                {log?.note && (
+                  <div className="ledger-row-note">{log.note}</div>
+                )}
 
                 {isExpanded && (
                   <DayEditor

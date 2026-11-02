@@ -1,3 +1,5 @@
+import { CalendarIcon, ClockIcon, SlidersIcon } from './Icons';
+
 export type TabType = 'today' | 'history' | 'settings';
 
 interface TabBarProps {
@@ -15,7 +17,8 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
         aria-selected={activeTab === 'today'}
         role="tab"
       >
-        Today
+        <CalendarIcon size={18} className="tab-icon" />
+        <span className="tab-label">Today</span>
       </button>
 
       <button
@@ -25,7 +28,8 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
         aria-selected={activeTab === 'history'}
         role="tab"
       >
-        History
+        <ClockIcon size={18} className="tab-icon" />
+        <span className="tab-label">History</span>
       </button>
 
       <button
@@ -35,7 +39,8 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
         aria-selected={activeTab === 'settings'}
         role="tab"
       >
-        Settings
+        <SlidersIcon size={18} className="tab-icon" />
+        <span className="tab-label">Settings</span>
       </button>
     </nav>
   );

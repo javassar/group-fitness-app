@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayOfYear, getDateRangeDescending, getUnloggedDates } from './dates';
+import { dayOfYear, getCurrentWeekDates, getDateRangeDescending, getUnloggedDates } from './dates';
 
 describe('dates helper functions', () => {
   describe('dayOfYear', () => {
@@ -53,6 +53,27 @@ describe('dates helper functions', () => {
       expect(unlogged).not.toContain('2027-03-03');
       // Today (2027-03-05) must not be included
       expect(unlogged).not.toContain('2027-03-05');
+    });
+  });
+
+  describe('getCurrentWeekDates', () => {
+    it('returns Monday through Sunday for a Wednesday', () => {
+      // 2026-11-04 is a Wednesday
+      const week = getCurrentWeekDates('2026-11-04');
+      expect(week.length).toBe(7);
+      expect(week[0]).toEqual({ date: '2026-11-02', label: 'M', dayName: 'Monday' });
+      expect(week[1]).toEqual({ date: '2026-11-03', label: 'T', dayName: 'Tuesday' });
+      expect(week[2]).toEqual({ date: '2026-11-04', label: 'W', dayName: 'Wednesday' });
+      expect(week[3]).toEqual({ date: '2026-11-05', label: 'T', dayName: 'Thursday' });
+      expect(week[4]).toEqual({ date: '2026-11-06', label: 'F', dayName: 'Friday' });
+      expect(week[5]).toEqual({ date: '2026-11-07', label: 'S', dayName: 'Saturday' });
+      expect(week[6]).toEqual({ date: '2026-11-08', label: 'S', dayName: 'Sunday' });
+    });
+
+    it('returns the same week whether evaluated on Monday or Sunday', () => {
+      const fromMonday = getCurrentWeekDates('2026-11-02');
+      const fromSunday = getCurrentWeekDates('2026-11-08');
+      expect(fromMonday).toEqual(fromSunday);
     });
   });
 });

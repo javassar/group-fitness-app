@@ -374,6 +374,7 @@ export function App() {
             signedInMemberId={signedInMember.id}
             statsRows={statsRows}
             todayLog={todayLog}
+            memberLogs={memberLogs}
             unloggedCount={unloggedDates.length}
             isSaving={isSaving}
             showInstallHint={showInstallHint}

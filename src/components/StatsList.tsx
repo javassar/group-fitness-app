@@ -1,6 +1,5 @@
 import type { GroupStatsRow } from '../data/types';
 import { computeStats } from '../lib/stats';
-import { CheckIcon, XIcon } from './Icons';
 
 interface StatsListProps {
   rows: GroupStatsRow[];
@@ -42,8 +41,13 @@ export function StatsList({
       {items.map(({ row, stats }) => {
         const isCurrentMember = row.memberId === signedInMemberId;
         const percentDisplay =
-          stats.percent !== null ? `${Math.round(stats.percent * 100)}%` : '\u2013';
-        const progressWidth = stats.percent !== null ? Math.round(stats.percent * 100) : 0;
+          stats.percent !== null ? `${Math.round(stats.percent * 100)}%` : '–';
+        const progressWidth =
+          stats.percent !== null
+            ? stats.workoutDays > 0
+              ? Math.max(Math.round(stats.percent * 100), 2)
+              : 0
+            : 0;
 
         return (
           <button
@@ -56,15 +60,20 @@ export function StatsList({
             <div className="stats-row-header">
               <div className="stats-row-name-group">
                 <span className="stats-name">{row.name}</span>
+                {isCurrentMember && <span className="stats-you-badge">YOU</span>}
                 {row.todayStatus === 'worked_out' && (
-                  <span className="status-badge worked" title="Worked out today" aria-label="Worked out today">
-                    <CheckIcon size={14} />
-                  </span>
+                  <span
+                    className="status-dot worked"
+                    title="Worked out today"
+                    aria-label="Worked out today"
+                  />
                 )}
                 {row.todayStatus === 'no_workout' && (
-                  <span className="status-badge rest" title="No workout today" aria-label="No workout today">
-                    <XIcon size={14} />
-                  </span>
+                  <span
+                    className="status-dot rest"
+                    title="No workout today"
+                    aria-label="No workout today"
+                  />
                 )}
               </div>
               <span className="stats-percent">{percentDisplay}</span>
@@ -78,9 +87,8 @@ export function StatsList({
             </div>
 
             <div className="stats-row-sub">
-              <span>
-                {stats.workoutDays} of {stats.daysCounted} days
-              </span>
+              <span className="stats-sub-count">{stats.workoutDays}</span>
+              <span className="stats-sub-total"> / {stats.daysCounted} days</span>
             </div>
           </button>
         );

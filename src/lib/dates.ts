@@ -108,3 +108,37 @@ export function formatDateShort(dateStr: string): string {
     day: 'numeric',
   });
 }
+
+export interface WeekDayInfo {
+  date: string;
+  label: string;
+  dayName: string;
+}
+
+export function getCurrentWeekDates(dateStr: string): WeekDayInfo[] {
+  const { year, month, day } = parseDateParts(dateStr);
+  const currentUtc = Date.UTC(year, month - 1, day);
+  const d = new Date(currentUtc);
+  const dayOfWeek = d.getUTCDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+  const daysSinceMonday = (dayOfWeek + 6) % 7;
+  const mondayUtc = currentUtc - daysSinceMonday * 86400000;
+
+  const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const week: WeekDayInfo[] = [];
+
+  for (let i = 0; i < 7; i++) {
+    const dayUtc = mondayUtc + i * 86400000;
+    const dateObj = new Date(dayUtc);
+    const y = dateObj.getUTCFullYear();
+    const m = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+    const dVal = String(dateObj.getUTCDate()).padStart(2, '0');
+    week.push({
+      date: `${y}-${m}-${dVal}`,
+      label: labels[i],
+      dayName: dayNames[i],
+    });
+  }
+
+  return week;
+}

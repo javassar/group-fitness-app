@@ -9,6 +9,7 @@ interface TodayScreenProps {
   signedInMemberId: string;
   statsRows: GroupStatsRow[];
   todayLog: DayLog | null;
+  memberLogs: DayLog[];
   unloggedCount: number;
   isSaving: boolean;
   showInstallHint: boolean;
@@ -25,6 +26,7 @@ export function TodayScreen({
   signedInMemberId,
   statsRows,
   todayLog,
+  memberLogs,
   unloggedCount,
   isSaving,
   showInstallHint,
@@ -53,20 +55,21 @@ export function TodayScreen({
         </aside>
       )}
 
+      <TodayCard
+        todayDate={todayDate}
+        currentStatus={todayLog?.status ?? null}
+        savedNote={todayLog?.note ?? null}
+        memberLogs={memberLogs}
+        isSaving={isSaving}
+        onSave={onSaveToday}
+        onClear={onClearToday}
+      />
+
       <StatsList
         rows={statsRows}
         currentYear={currentYear}
         signedInMemberId={signedInMemberId}
         onSelectMember={onSelectMember}
-      />
-
-      <TodayCard
-        todayDate={todayDate}
-        currentStatus={todayLog?.status ?? null}
-        savedNote={todayLog?.note ?? null}
-        isSaving={isSaving}
-        onSave={onSaveToday}
-        onClear={onClearToday}
       />
     </div>
   );

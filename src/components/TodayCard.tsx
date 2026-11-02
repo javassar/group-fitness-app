@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import type { DayStatus } from '../data/types';
-import { formatDateLong } from '../lib/dates';
+import type { DayLog, DayStatus } from '../data/types';
+import { formatDateLong, getCurrentWeekDates } from '../lib/dates';
 import { CheckIcon, XIcon } from './Icons';
 
 interface TodayCardProps {
   todayDate: string;
   currentStatus: DayStatus | null;
   savedNote: string | null;
+  memberLogs?: DayLog[];
   isSaving: boolean;
   onSave: (status: DayStatus, note: string | null) => Promise<void>;
   onClear: () => Promise<void>;
@@ -16,6 +17,7 @@ export function TodayCard({
   todayDate,
   currentStatus,
   savedNote,
+  memberLogs = [],
   isSaving,
   onSave,
   onClear,
@@ -41,9 +43,57 @@ export function TodayCard({
     setNote('');
   };
 
+  const weekDays = getCurrentWeekDates(todayDate);
+  const logsMap = new Map(memberLogs.map((l) => [l.date, l.status]));
+
   return (
     <section className="today-card" aria-label="Today log card">
-      <h2 className="today-date-label">{formatDateLong(todayDate)}</h2>
+      <div className="today-card-header">
+        <span className="today-eyebrow">TODAY</span>
+        <h2 className="today-date-label">{formatDateLong(todayDate)}</h2>
+      </div>
+
+      <div className="week-tracker" role="region" aria-label="Current week workout activity">
+        {weekDays.map((day) => {
+          const isToday = day.date === todayDate;
+          const isFuture = day.date > todayDate;
+          const dayStatus = isToday ? currentStatus : (logsMap.get(day.date) ?? null);
+          const isCompleted = dayStatus === 'worked_out';
+
+          let dotClass = 'is-missed';
+          let statusText = 'Not logged';
+
+          if (isCompleted) {
+            dotClass = 'is-completed';
+            statusText = 'Worked out';
+          } else if (isFuture) {
+            dotClass = 'is-future';
+            statusText = 'Upcoming';
+          } else if (dayStatus === 'no_workout') {
+            dotClass = 'is-missed';
+            statusText = 'Rest day';
+          }
+
+          if (isToday) {
+            statusText += ' (Today)';
+          }
+
+          return (
+            <div
+              key={day.date}
+              className={`week-day-col ${isToday ? 'is-today' : ''}`}
+              title={`${day.dayName}: ${statusText}`}
+              aria-label={`${day.dayName}: ${statusText}`}
+            >
+              <span
+                className={`week-dot ${dotClass} ${isToday && isCompleted ? 'today-pulse' : ''}`}
+                aria-hidden="true"
+              />
+              <span className="week-day-label">{day.label}</span>
+            </div>
+          );
+        })}
+      </div>
 
       <div className="today-actions">
         <button
@@ -54,7 +104,7 @@ export function TodayCard({
           aria-pressed={currentStatus === 'worked_out'}
         >
           <span className="btn-circle btn-workout-circle">
-            <CheckIcon size={32} />
+            <CheckIcon size={30} />
           </span>
           <span className="btn-choice-label">Worked out</span>
         </button>
@@ -67,7 +117,7 @@ export function TodayCard({
           aria-pressed={currentStatus === 'no_workout'}
         >
           <span className="btn-circle btn-no-workout-circle">
-            <XIcon size={32} />
+            <XIcon size={30} />
           </span>
           <span className="btn-choice-label">No workout today</span>
         </button>
@@ -81,7 +131,7 @@ export function TodayCard({
           id="today-note-input"
           type="text"
           className="note-input"
-          placeholder="What did you do? (optional)"
+          placeholder="What did you do today? (optional)"
           maxLength={200}
           value={note}
           onChange={(e) => setNote(e.target.value)}
