@@ -189,4 +189,24 @@ export class MockDataClient implements DataClient {
     this.assertPasscode();
     this.logs.delete(`${memberId}:${date}`);
   }
+
+  private pausedDates: Map<string, string | null> = new Map();
+
+  async savePushSubscription(): Promise<void> {
+    this.assertPasscode();
+  }
+
+  async removePushSubscription(): Promise<void> {
+    this.assertPasscode();
+  }
+
+  async getReminderSettings(memberId: string): Promise<{ pausedUntil: string | null }> {
+    this.assertPasscode();
+    return { pausedUntil: this.pausedDates.get(memberId) ?? null };
+  }
+
+  async setRemindersPausedUntil(memberId: string, date: string | null): Promise<void> {
+    this.assertPasscode();
+    this.pausedDates.set(memberId, date);
+  }
 }

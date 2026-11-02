@@ -31,4 +31,8 @@ export interface DataClient {
   getMemberLogs(memberId: string, year: number): Promise<DayLog[]>;
   setDayLog(memberId: string, date: string, status: DayStatus, note: string | null): Promise<void>;
   clearDayLog(memberId: string, date: string): Promise<void>;
+  savePushSubscription(memberId: string, sub: { endpoint: string; p256dh: string; auth: string }): Promise<void>;
+  removePushSubscription(endpoint: string): Promise<void>;
+  getReminderSettings(memberId: string): Promise<{ pausedUntil: string | null }>;
+  setRemindersPausedUntil(memberId: string, date: string | null): Promise<void>;
 }

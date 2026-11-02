@@ -3,6 +3,7 @@ import type { DataClient, DayLog, DayStatus, GroupStatsRow, Member } from './dat
 import { createDataClient, isMockMode } from './data';
 import { deviceTimeZone, getUnloggedDates, todayLocal } from './lib/dates';
 import { isIOS, isStandalone } from './lib/platform';
+import { unsubscribeFromPush } from './lib/push';
 import {
   clearAllAuth,
   clearStoredMemberId,
@@ -182,7 +183,15 @@ export function App() {
   }, [loadData]);
 
   // Sign out / switch member
-  const handleNotYou = () => {
+  const handleNotYou = async () => {
+    try {
+      const endpoint = await unsubscribeFromPush();
+      if (endpoint) {
+        await client.removePushSubscription(endpoint);
+      }
+    } catch {
+      // Continue even if unsubscribe fails
+    }
     clearStoredMemberId();
     setMemberId(null);
     setHistoryViewingMemberId(null);
@@ -397,7 +406,13 @@ export function App() {
             onClearDayLog={handleClearDayLog}
           />
         )}
-        {activeTab === 'settings' && <SettingsScreen />}
+        {activeTab === 'settings' && (
+          <SettingsScreen
+            client={client}
+            signedInMemberId={signedInMember.id}
+            todayDate={currentDate}
+          />
+        )}
       </main>
 
       <TabBar activeTab={activeTab} onTabChange={setActiveTab} />

@@ -1,7 +1,130 @@
+import { useCallback, useEffect, useState } from 'react';
+import type { DataClient } from '../data/types';
 import { isMockMode } from '../data';
+import { isIOS, isPushSupported, isStandalone } from '../lib/platform';
+import {
+  extractSubscriptionKeys,
+  getExistingSubscription,
+  subscribeToPush,
+  unsubscribeFromPush,
+} from '../lib/push';
+import { getReminderUiState, type ReminderUiState } from '../lib/reminderState';
+import { RemindersCard } from '../components/RemindersCard';
+import { PauseCard } from '../components/PauseCard';
 
-export function SettingsScreen() {
+interface SettingsScreenProps {
+  client: DataClient;
+  signedInMemberId: string;
+  todayDate: string;
+}
+
+export function SettingsScreen({ client, signedInMemberId, todayDate }: SettingsScreenProps) {
   const isDemo = isMockMode();
+  const [reminderState, setReminderState] = useState<ReminderUiState>('off');
+  const [pausedUntil, setPausedUntil] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
+
+  // Resolve current permission and subscription state
+  const refreshState = useCallback(async () => {
+    const supported = isPushSupported();
+    const ios = isIOS();
+    const standalone = isStandalone();
+    const permission = typeof Notification !== 'undefined' ? Notification.permission : null;
+
+    let sub: PushSubscription | null = null;
+    if (supported) {
+      sub = await getExistingSubscription();
+    }
+
+    const state = getReminderUiState({
+      supported,
+      isIOS: ios,
+      isStandalone: standalone,
+      permission,
+      hasSubscription: sub !== null,
+    });
+    setReminderState(state);
+
+    // Silent upsert if permission granted and subscription exists
+    if (!isDemo && permission === 'granted' && sub) {
+      try {
+        const keys = extractSubscriptionKeys(sub);
+        await client.savePushSubscription(signedInMemberId, keys);
+      } catch {
+        // Silently ignore background sync failures
+      }
+    }
+
+    // Load pause settings
+    if (!isDemo) {
+      try {
+        const settings = await client.getReminderSettings(signedInMemberId);
+        setPausedUntil(settings.pausedUntil);
+      } catch {
+        // Silently ignore
+      }
+    }
+  }, [client, signedInMemberId, isDemo]);
+
+  useEffect(() => {
+    refreshState();
+  }, [refreshState]);
+
+  const handleTurnOn = async () => {
+    if (!vapidPublicKey) {
+      setErrorMessage('Missing public VAPID key in environment variables.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const sub = await subscribeToPush(vapidPublicKey);
+      const keys = extractSubscriptionKeys(sub);
+      await client.savePushSubscription(signedInMemberId, keys);
+      await refreshState();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorMessage(msg);
+      await refreshState();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTurnOff = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const endpoint = await unsubscribeFromPush();
+      if (endpoint) {
+        await client.removePushSubscription(endpoint);
+      }
+      await refreshState();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorMessage(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSetPausedUntil = async (date: string | null) => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      await client.setRemindersPausedUntil(signedInMemberId, date);
+      setPausedUntil(date);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorMessage(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="screen-content">
@@ -9,22 +132,34 @@ export function SettingsScreen() {
         <h1 className="settings-title">Settings</h1>
       </div>
 
-      <section className="settings-card" aria-label="Reminders on this device">
-        <h2 className="settings-card-title">Reminders on this device</h2>
+      {errorMessage && (
+        <div className="toast-error" role="alert">
+          <span>{errorMessage}</span>
+          <button
+            type="button"
+            className="btn-text-link"
+            onClick={() => setErrorMessage(null)}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
-        {isDemo ? (
-          <p className="settings-notice">Reminders are not available in demo mode.</p>
-        ) : (
-          <div className="settings-section-body">
-            <p className="settings-explanation">
-              Reminders need the app on your Home Screen. In Safari, open the Share menu, choose Add to Home Screen, then open the app from your Home Screen and turn reminders on there. The installed app asks for the passcode and your name again.
-            </p>
-            <p className="settings-subtext">
-              You get one reminder around 8pm on days you have not logged.
-            </p>
-          </div>
-        )}
-      </section>
+      <RemindersCard
+        state={reminderState}
+        isDemo={isDemo}
+        isLoading={isLoading}
+        onTurnOn={handleTurnOn}
+        onTurnOff={handleTurnOff}
+      />
+
+      <PauseCard
+        pausedUntil={pausedUntil}
+        todayDate={todayDate}
+        isDemo={isDemo}
+        isLoading={isLoading}
+        onSetPausedUntil={handleSetPausedUntil}
+      />
     </div>
   );
 }

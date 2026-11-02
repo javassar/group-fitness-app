@@ -150,4 +150,56 @@ export class SupabaseDataClient implements DataClient {
       throw new Error(error.message);
     }
   }
+
+  async savePushSubscription(
+    memberId: string,
+    sub: { endpoint: string; p256dh: string; auth: string }
+  ): Promise<void> {
+    const { error } = await this.client.rpc('save_push_subscription', {
+      p_passcode: this.passcode,
+      p_member_id: memberId,
+      p_endpoint: sub.endpoint,
+      p_p256dh_key: sub.p256dh,
+      p_auth_key: sub.auth,
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  async removePushSubscription(endpoint: string): Promise<void> {
+    const { error } = await this.client.rpc('remove_push_subscription', {
+      p_passcode: this.passcode,
+      p_endpoint: endpoint,
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  async getReminderSettings(memberId: string): Promise<{ pausedUntil: string | null }> {
+    const { data, error } = await this.client.rpc('get_reminder_settings', {
+      p_passcode: this.passcode,
+      p_member_id: memberId,
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
+    const row =
+      Array.isArray(data) && data.length > 0
+        ? (data[0] as { paused_until: string | null })
+        : null;
+    return { pausedUntil: row?.paused_until ?? null };
+  }
+
+  async setRemindersPausedUntil(memberId: string, date: string | null): Promise<void> {
+    const { error } = await this.client.rpc('set_reminders_paused_until', {
+      p_passcode: this.passcode,
+      p_member_id: memberId,
+      p_paused_until: date,
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
 }
