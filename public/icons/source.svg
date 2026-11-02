@@ -1,4 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" fill="#2563eb"/>
-  <path d="M120 260 L220 360 L392 152" fill="none" stroke="#ffffff" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Dark Square Base -->
+  <rect width="512" height="512" fill="#120809"/>
+  
+  <!-- Subtle Oxblood Inner Border -->
+  <rect x="24" y="24" width="464" height="464" rx="72" fill="none" stroke="#640D14" stroke-width="6" opacity="0.85"/>
+
+  <!-- Kettlebell Handle -->
+  <path d="M 180 220 C 180 115, 332 115, 332 220" fill="none" stroke="#F5EBE6" stroke-width="28" stroke-linecap="round"/>
+
+  <!-- Kettlebell Main Body -->
+  <path d="M 172 236 C 148 266, 138 300, 138 332 C 138 385, 172 416, 212 416 L 300 416 C 340 416, 374 385, 374 332 C 374 300, 364 266, 340 236 Z" fill="#1E0B0F" stroke="#F5EBE6" stroke-width="14" stroke-linejoin="round"/>
+
+  <!-- Arterial Crimson Core -->
+  <circle cx="256" cy="328" r="46" fill="#800E13" stroke="#AD2831" stroke-width="8"/>
+  <path d="M 256 304 L 276 328 L 256 352 L 236 328 Z" fill="#F5EBE6" opacity="0.95"/>
 </svg>

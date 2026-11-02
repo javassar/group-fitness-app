@@ -41,7 +41,7 @@ async function generate() {
       bottom: pad,
       left: pad,
       right: pad,
-      background: '#2563eb',
+      background: '#120809',
     })
     .png()
     .toFile(path.join(ICONS_DIR, 'icon-512-maskable.png'));
@@ -50,7 +50,7 @@ async function generate() {
   // 4. apple-touch-icon.png (180x180, fully opaque)
   await sharp(sourceBuffer)
     .resize(180, 180)
-    .flatten({ background: '#2563eb' })
+    .flatten({ background: '#120809' })
     .png()
     .toFile(path.join(ICONS_DIR, 'apple-touch-icon.png'));
   console.log('✓ apple-touch-icon.png (180x180)');

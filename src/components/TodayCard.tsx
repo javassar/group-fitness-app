@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import confetti from 'canvas-confetti';
 import type { DayLog, DayStatus } from '../data/types';
 import { formatDateLong, getCurrentWeekDates } from '../lib/dates';
 import { CheckIcon, XIcon } from './Icons';
@@ -33,11 +34,26 @@ export function TodayCard({
 
   const handleStatusClick = async (status: DayStatus) => {
     if (isSaving) return;
-    if (status === 'worked_out' && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    if (status === 'worked_out') {
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate(20);
+        } catch {
+          // Ignore if vibration is blocked or unsupported on the device
+        }
+      }
       try {
-        navigator.vibrate(20);
+        confetti({
+          particleCount: 50,
+          spread: 70,
+          origin: { y: 0.65 },
+          colors: ['#AD2831', '#800E13', '#F5EBE6', '#D97706'],
+          scalar: 0.9,
+          ticks: 200,
+          disableForReducedMotion: true,
+        });
       } catch {
-        // Ignore if vibration is blocked or unsupported on the device
+        // Ignore if confetti fails
       }
     }
     const sanitizedNote = note.trim().slice(0, 200);
@@ -56,7 +72,6 @@ export function TodayCard({
   return (
     <section className="today-card" aria-label="Today log card">
       <div className="today-card-header">
-        <span className="today-eyebrow">TODAY</span>
         <h2 className="today-date-label">{formatDateLong(todayDate)}</h2>
       </div>
 

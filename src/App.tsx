@@ -346,7 +346,7 @@ export function App() {
 
       <header className="app-header">
         <div className="app-header-main">
-          <h1 className="app-header-title">Group Fitness {currentYear}</h1>
+          <h1 className="app-header-title">Fitness Tracker</h1>
           <div className="app-header-user">
             <span>Signed in as {signedInMember.name}</span>
             <button
