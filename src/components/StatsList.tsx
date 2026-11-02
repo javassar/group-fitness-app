@@ -1,10 +1,12 @@
-import type { GroupStatsRow } from '../data/types';
+import type { GroupStatsRow, MemberGoal } from '../data/types';
+import { describeGoalShort, GOALS_START_YEAR } from '../lib/goals';
 import { computeStats } from '../lib/stats';
 
 interface StatsListProps {
   rows: GroupStatsRow[];
   currentYear: number;
   signedInMemberId: string;
+  memberGoals?: MemberGoal[];
   onSelectMember: (memberId: string) => void;
 }
 
@@ -12,12 +14,14 @@ export function StatsList({
   rows,
   currentYear,
   signedInMemberId,
+  memberGoals,
   onSelectMember,
 }: StatsListProps) {
   // Compute stats for each row and sort: percent descending (null last, ties by name)
   const items = rows.map((row) => ({
     row,
     stats: computeStats(currentYear, row),
+    goal: memberGoals?.find((g) => g.memberId === row.memberId),
   }));
 
   items.sort((a, b) => {
@@ -38,7 +42,7 @@ export function StatsList({
 
   return (
     <div className="stats-list" role="region" aria-label="Group workout statistics">
-      {items.map(({ row, stats }) => {
+      {items.map(({ row, stats, goal }) => {
         const isCurrentMember = row.memberId === signedInMemberId;
         const percentDisplay =
           stats.percent !== null ? `${Math.round(stats.percent * 100)}%` : '–';
@@ -58,22 +62,37 @@ export function StatsList({
             aria-label={`${row.name}: ${percentDisplay}, ${stats.workoutDays} of ${stats.daysCounted} days logged${isCurrentMember ? ' (you)' : ''}`}
           >
             <div className="stats-row-header">
-              <div className="stats-row-name-group">
-                <span className="stats-name">{row.name}</span>
-                {isCurrentMember && <span className="stats-you-badge">YOU</span>}
-                {row.todayStatus === 'worked_out' && (
-                  <span
-                    className="status-dot worked"
-                    title="Worked out today"
-                    aria-label="Worked out today"
-                  />
-                )}
-                {row.todayStatus === 'no_workout' && (
-                  <span
-                    className="status-dot rest"
-                    title="No workout today"
-                    aria-label="No workout today"
-                  />
+              <div className="stats-row-name-block">
+                <div className="stats-row-name-group">
+                  <span className="stats-name">{row.name}</span>
+                  {isCurrentMember && <span className="stats-you-badge">YOU</span>}
+                  {row.todayStatus === 'worked_out' && (
+                    <span
+                      className="status-dot worked"
+                      title="Worked out today"
+                      aria-label="Worked out today"
+                    />
+                  )}
+                  {row.todayStatus === 'no_workout' && (
+                    <span
+                      className="status-dot rest"
+                      title="No workout today"
+                      aria-label="No workout today"
+                    />
+                  )}
+                </div>
+                {currentYear >= GOALS_START_YEAR && (
+                  <div className="stats-goal-text">
+                    {goal ? (
+                      <>
+                        Goal: {describeGoalShort(goal.goal)}
+                        {goal.changeCount >= 1 &&
+                          ` (changed ${goal.changeCount} ${goal.changeCount === 1 ? 'time' : 'times'})`}
+                      </>
+                    ) : (
+                      'No goal set yet'
+                    )}
+                  </div>
                 )}
               </div>
               <span className="stats-percent">{percentDisplay}</span>

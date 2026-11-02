@@ -60,6 +60,17 @@ npm run dev
 
 - **Passcode**: Enter your group's private passphrase.
 
+### Testing Goals Locally
+
+Yearly goals normally activate starting in 2027. To test the goal setup screen, goal cards, and pace tracking in 2026, add this line to your local `.env.local` file:
+
+```env
+VITE_GOALS_START_YEAR=2026
+```
+
+> [!WARNING]
+> **Local only:** Never add `VITE_GOALS_START_YEAR` to Vercel's environment variables or commit it to any repository file. Any test goals created during 2026 testing can be wiped before the January 2027 launch by running `supabase/reset_goals.sql` in the Supabase SQL Editor.
+
 ### Running Unit Tests & Verification
 
 Run the automated test suite with Vitest:

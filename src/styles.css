@@ -1368,3 +1368,154 @@ input {
 .tab-label {
   line-height: 1;
 }
+
+/* ==========================================================================
+   Yearly Goals (SPEC-3 Milestone 9)
+   ========================================================================== */
+
+/* Goal Card on Today Screen */
+.goal-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  padding: 16px 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.goal-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.goal-card-title {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.goal-card-change-btn {
+  font-size: 0.8125rem;
+  color: #F5EBE6;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.goal-card-change-btn:hover {
+  color: var(--accent-hover);
+}
+
+.goal-card-desc {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.35;
+}
+
+.goal-card-status {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Stats list goal text */
+.stats-row-name-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.stats-goal-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+  font-weight: 400;
+}
+
+/* Goal Setup Screen (Blocking) */
+.goal-setup-card {
+  width: 100%;
+  max-width: var(--max-content-width);
+}
+
+.goal-setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.segmented-control {
+  display: flex;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-btn);
+  padding: 3px;
+  gap: 4px;
+}
+
+.segmented-btn {
+  flex: 1;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: calc(var(--radius-btn) - 2px);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.segmented-btn:hover {
+  color: var(--text-main);
+}
+
+.segmented-btn.active {
+  background-color: var(--accent-color);
+  color: var(--text-main);
+  box-shadow: 0 0 10px rgba(173, 40, 49, 0.3);
+}
+
+.goal-input {
+  width: 100%;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  letter-spacing: 0.04em;
+}
+
+.goal-helper-text {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.goal-validation-error {
+  text-align: center;
+  margin-top: 6px;
+}
+
+.goal-confirm-box {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.goal-confirm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+

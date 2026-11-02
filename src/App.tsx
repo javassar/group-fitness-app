@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { DataClient, DayLog, DayStatus, GroupStatsRow, Member } from './data/types';
+import type {
+  DataClient,
+  DayLog,
+  DayStatus,
+  Goal,
+  GroupStatsRow,
+  Member,
+  MemberGoal,
+} from './data/types';
 import { createDataClient, isMockMode } from './data';
 import { deviceTimeZone, getUnloggedDates, todayLocal } from './lib/dates';
+import { GOALS_START_YEAR } from './lib/goals';
 import { isIOS, isStandalone } from './lib/platform';
 import { unsubscribeFromPush } from './lib/push';
 import {
@@ -14,6 +23,7 @@ import {
 } from './lib/storage';
 import { PasscodeScreen } from './screens/PasscodeScreen';
 import { NamePickerScreen } from './screens/NamePickerScreen';
+import { GoalSetupScreen } from './screens/GoalSetupScreen';
 import { TodayScreen } from './screens/TodayScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -32,14 +42,17 @@ export function App() {
   const [statsRows, setStatsRows] = useState<GroupStatsRow[]>([]);
   const [memberLogs, setMemberLogs] = useState<DayLog[]>([]);
   const [viewingMemberLogs, setViewingMemberLogs] = useState<DayLog[]>([]);
+  const [memberGoals, setMemberGoals] = useState<MemberGoal[]>([]);
 
   const [activeTab, setActiveTab] = useState<TabType>('today');
   const [historyViewingMemberId, setHistoryViewingMemberId] = useState<string | null>(null);
   const [historyInitialOnlyUnlogged, setHistoryInitialOnlyUnlogged] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [goalErrorMessage, setGoalErrorMessage] = useState<string | null>(null);
 
   const [installHintDismissed, setInstallHintDismissed] = useState(() =>
     getStoredInstallHintDismissed()
@@ -123,6 +136,14 @@ export function App() {
       const logs = await client.getMemberLogs(memberId, currentYear);
       setMemberLogs(logs);
 
+      // 3. Fetch goals if at or past start year
+      if (currentYear >= GOALS_START_YEAR) {
+        const goals = await client.getGoals(currentYear);
+        setMemberGoals(goals);
+      } else {
+        setMemberGoals([]);
+      }
+
       // If viewing another member's history, load their logs too
       const viewingId = historyViewingMemberId ?? memberId;
       if (viewingId === memberId) {
@@ -137,6 +158,7 @@ export function App() {
       }
     } finally {
       setIsLoading(false);
+      setHasLoadedInitial(true);
     }
   }, [passcode, memberId, client, currentYear, historyViewingMemberId, handleAuthError]);
 
@@ -188,6 +210,8 @@ export function App() {
     clearStoredMemberId();
     setMemberId(null);
     setHistoryViewingMemberId(null);
+    setMemberGoals([]);
+    setHasLoadedInitial(false);
     setActiveTab('today');
 
     // Clean up push notification subscription in the background (non-blocking)
@@ -249,6 +273,23 @@ export function App() {
     }
   };
 
+  // Save goal from GoalSetupScreen
+  const handleSaveGoal = async (goal: Goal) => {
+    if (!memberId) return;
+    setIsSaving(true);
+    setGoalErrorMessage(null);
+    try {
+      await client.setGoal(memberId, currentYear, goal);
+      await loadData();
+    } catch (err) {
+      if (!handleAuthError(err)) {
+        setGoalErrorMessage('Failed to save goal. Try again.');
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Save or clear past day log from History
   const handleSaveDayLog = async (date: string, status: DayStatus, note: string | null) => {
     if (!memberId) return;
@@ -297,8 +338,8 @@ export function App() {
     );
   }
 
-  // Initial loading state
-  if (isLoading && members.length === 0) {
+  // Initial loading state - show Loading... until all initial data (including goals) has finished loading
+  if (!hasLoadedInitial || (isLoading && members.length === 0)) {
     return (
       <div className="screen-center">
         <p className="loading-text">Loading...</p>
@@ -317,6 +358,21 @@ export function App() {
           </button>
         </div>
       </div>
+    );
+  }
+
+  // Goal requirement gate (SPEC-3.md section 5.4)
+  const signedInGoal = memberGoals.find((g) => g.memberId === memberId);
+  const isGoalRequired = currentYear >= GOALS_START_YEAR && !signedInGoal;
+
+  if (isGoalRequired) {
+    return (
+      <GoalSetupScreen
+        year={currentYear}
+        onSaveGoal={handleSaveGoal}
+        isSaving={isSaving}
+        errorMessage={goalErrorMessage}
+      />
     );
   }
 
@@ -381,6 +437,7 @@ export function App() {
             unloggedCount={unloggedDates.length}
             isSaving={isSaving}
             showInstallHint={showInstallHint}
+            memberGoals={memberGoals}
             onDismissInstallHint={handleDismissInstallHint}
             onReviewUnlogged={() => {
               setHistoryViewingMemberId(signedInMember.id);

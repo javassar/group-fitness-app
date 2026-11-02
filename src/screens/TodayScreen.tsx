@@ -1,7 +1,10 @@
-import type { DayLog, DayStatus, GroupStatsRow } from '../data/types';
+import type { DayLog, DayStatus, GroupStatsRow, MemberGoal } from '../data/types';
+import { GoalCard } from '../components/GoalCard';
 import { InstallHint } from '../components/InstallHint';
 import { StatsList } from '../components/StatsList';
 import { TodayCard } from '../components/TodayCard';
+import { computeGoalStatus, GOALS_START_YEAR } from '../lib/goals';
+import { computeStats } from '../lib/stats';
 
 interface TodayScreenProps {
   todayDate: string;
@@ -13,11 +16,13 @@ interface TodayScreenProps {
   unloggedCount: number;
   isSaving: boolean;
   showInstallHint: boolean;
+  memberGoals?: MemberGoal[];
   onDismissInstallHint: () => void;
   onReviewUnlogged: () => void;
   onSelectMember: (memberId: string) => void;
   onSaveToday: (status: DayStatus, note: string | null) => Promise<void>;
   onClearToday: () => Promise<void>;
+  onOpenGoalChange?: () => void;
 }
 
 export function TodayScreen({
@@ -30,12 +35,27 @@ export function TodayScreen({
   unloggedCount,
   isSaving,
   showInstallHint,
+  memberGoals,
   onDismissInstallHint,
   onReviewUnlogged,
   onSelectMember,
   onSaveToday,
   onClearToday,
+  onOpenGoalChange,
 }: TodayScreenProps) {
+  const signedInGoal = memberGoals?.find((g) => g.memberId === signedInMemberId);
+  const signedInRow = statsRows.find((r) => r.memberId === signedInMemberId);
+  const signedInStats = signedInRow ? computeStats(currentYear, signedInRow) : null;
+  const goalStatus =
+    signedInGoal && signedInStats
+      ? computeGoalStatus(
+          signedInGoal.goal,
+          currentYear,
+          signedInStats.workoutDays,
+          signedInStats.daysCounted
+        )
+      : { state: 'not_started' as const };
+
   return (
     <div className="screen-content">
       {showInstallHint && <InstallHint onDismiss={onDismissInstallHint} />}
@@ -65,10 +85,20 @@ export function TodayScreen({
         onClear={onClearToday}
       />
 
+      {currentYear >= GOALS_START_YEAR && signedInGoal && (
+        <GoalCard
+          goal={signedInGoal.goal}
+          year={currentYear}
+          status={goalStatus}
+          onChangeGoal={onOpenGoalChange}
+        />
+      )}
+
       <StatsList
         rows={statsRows}
         currentYear={currentYear}
         signedInMemberId={signedInMemberId}
+        memberGoals={memberGoals}
         onSelectMember={onSelectMember}
       />
     </div>

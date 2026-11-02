@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MockDataClient } from '../data/mockClient';
 import {
   computeGoalStatus,
   describeGoal,
@@ -125,5 +126,52 @@ describe('describeGoalShort and goalStatusText', () => {
     expect(goalStatusText({ state: 'behind', daysBehind: 2 })).toBe(
       'Behind pace. 2 more workout days to catch up.'
     );
+  });
+});
+
+describe('MockDataClient goal storage and behavior', () => {
+  it('manages goals, change tracking, and change logs correctly', async () => {
+    const client = new MockDataClient('test');
+    const year = 2027;
+
+    // 1. Initial state has no goals
+    const initialGoals = await client.getGoals(year);
+    expect(initialGoals).toEqual([]);
+
+    // 2. Setting first goal creates no change log entry
+    await client.setGoal('m-jackie', year, { type: 'days', value: 200 });
+    const afterFirst = await client.getGoals(year);
+    expect(afterFirst).toHaveLength(1);
+    expect(afterFirst[0]).toEqual({
+      memberId: 'm-jackie',
+      goal: { type: 'days', value: 200 },
+      changeCount: 0,
+    });
+
+    const initialChanges = await client.getGoalChanges(year);
+    expect(initialChanges).toEqual([]);
+
+    // 3. Setting identical goal is a no-op
+    await client.setGoal('m-jackie', year, { type: 'days', value: 200 });
+    const afterSame = await client.getGoals(year);
+    expect(afterSame[0].changeCount).toBe(0);
+    const sameChanges = await client.getGoalChanges(year);
+    expect(sameChanges).toEqual([]);
+
+    // 4. Changing goal increments changeCount and creates a change log entry
+    await client.setGoal('m-jackie', year, { type: 'percent', value: 60 });
+    const afterChange = await client.getGoals(year);
+    expect(afterChange[0]).toEqual({
+      memberId: 'm-jackie',
+      goal: { type: 'percent', value: 60 },
+      changeCount: 1,
+    });
+
+    const changes = await client.getGoalChanges(year);
+    expect(changes).toHaveLength(1);
+    expect(changes[0].memberId).toBe('m-jackie');
+    expect(changes[0].memberName).toBe('Jackie');
+    expect(changes[0].oldGoal).toEqual({ type: 'days', value: 200 });
+    expect(changes[0].newGoal).toEqual({ type: 'percent', value: 60 });
   });
 });
