@@ -122,7 +122,7 @@ input {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-bottom: 72px; /* space for bottom tab bar */
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   overflow-x: hidden;
 }
 
@@ -774,13 +774,100 @@ input {
   cursor: not-allowed;
 }
 
-/* Bottom Tab Bar */
+/* Install Hint Banner (Today tab) */
+.install-hint-banner {
+  background-color: var(--accent-light);
+  border: 1px solid var(--accent-color);
+  color: var(--text-main);
+  padding: 12px 14px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.install-hint-text {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--text-main);
+}
+
+.btn-install-dismiss {
+  align-self: flex-end;
+  background-color: var(--bg-card);
+  color: var(--accent-color);
+  border: 1px solid var(--accent-color);
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 6px 16px;
+}
+
+.btn-install-dismiss:hover {
+  background-color: var(--accent-color);
+  color: #ffffff;
+}
+
+/* Settings Screen */
+.settings-header {
+  margin-bottom: 8px;
+}
+
+.settings-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.settings-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.settings-card-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.settings-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-explanation {
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--text-main);
+}
+
+.settings-subtext {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.settings-notice {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Bottom Tab Bar with iOS safe area padding */
 .tab-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 56px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
   background-color: var(--bg-card);
   border-top: 1px solid var(--border-color);
   display: flex;
@@ -790,8 +877,8 @@ input {
 
 .tab-item {
   flex: 1;
-  max-width: calc(var(--max-content-width) / 2);
-  height: 100%;
+  max-width: calc(var(--max-content-width) / 3);
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;

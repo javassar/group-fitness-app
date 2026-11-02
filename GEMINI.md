@@ -25,3 +25,10 @@ Jackie is new to web development and strong in math and statistics. She wants to
 - How to check it: exact steps Jackie can follow, including any command to run in her own terminal.
 - Not verified: anything you could not test yourself.
 - Assumptions and open questions.
+
+## Additions for SPEC-2.md (milestones 5 to 7)
+
+- The build spec for milestones 5 to 7 is SPEC-2.md. SPEC.md still applies to everything it covers. Allowed dependencies are those in SPEC.md section 3 plus SPEC-2.md section 3.
+- Never write VAPID_PRIVATE_KEY, CRON_SECRET, or any other secret value into any file, log, test, or commit. They live only in Vercel's environment settings, which Jackie sets herself. Do not ask her to paste them to you.
+- Files in api/ run only on Vercel. Do not install the Vercel CLI or run vercel dev. Verify with npm run build and npm test, and ask Jackie to test the deployed site on her iPhone.
+- Jackie pushes to GitHub herself. After each push Vercel deploys. Ask her to report what she sees on her phone, and to paste Vercel log output (with secrets removed) if something fails.

@@ -1,4 +1,4 @@
-export type TabType = 'today' | 'history';
+export type TabType = 'today' | 'history' | 'settings';
 
 interface TabBarProps {
   activeTab: TabType;
@@ -26,6 +26,16 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
         role="tab"
       >
         History
+      </button>
+
+      <button
+        type="button"
+        className={`tab-item ${activeTab === 'settings' ? 'is-active' : ''}`}
+        onClick={() => onTabChange('settings')}
+        aria-selected={activeTab === 'settings'}
+        role="tab"
+      >
+        Settings
       </button>
     </nav>
   );

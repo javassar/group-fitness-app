@@ -4,6 +4,7 @@
 
 const KEY_PASSCODE = 'gfa.passcode';
 const KEY_MEMBER_ID = 'gfa.memberId';
+const KEY_INSTALL_HINT_DISMISSED = 'gfa.installHintDismissed';
 
 export function getStoredPasscode(): string | null {
   try {
@@ -56,4 +57,20 @@ export function clearStoredMemberId(): void {
 export function clearAllAuth(): void {
   clearStoredPasscode();
   clearStoredMemberId();
+}
+
+export function getStoredInstallHintDismissed(): boolean {
+  try {
+    return localStorage.getItem(KEY_INSTALL_HINT_DISMISSED) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function setStoredInstallHintDismissed(): void {
+  try {
+    localStorage.setItem(KEY_INSTALL_HINT_DISMISSED, '1');
+  } catch {
+    // Ignore storage errors
+  }
 }

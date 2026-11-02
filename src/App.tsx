@@ -2,16 +2,20 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DataClient, DayLog, DayStatus, GroupStatsRow, Member } from './data/types';
 import { createDataClient, isMockMode } from './data';
 import { deviceTimeZone, getUnloggedDates, todayLocal } from './lib/dates';
+import { isIOS, isStandalone } from './lib/platform';
 import {
   clearAllAuth,
   clearStoredMemberId,
+  getStoredInstallHintDismissed,
   getStoredMemberId,
   getStoredPasscode,
+  setStoredInstallHintDismissed,
 } from './lib/storage';
 import { PasscodeScreen } from './screens/PasscodeScreen';
 import { NamePickerScreen } from './screens/NamePickerScreen';
 import { TodayScreen } from './screens/TodayScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
+import { SettingsScreen } from './screens/SettingsScreen';
 import { TabBar, type TabType } from './components/TabBar';
 
 export function App() {
@@ -35,6 +39,17 @@ export function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const [installHintDismissed, setInstallHintDismissed] = useState(() =>
+    getStoredInstallHintDismissed()
+  );
+
+  const showInstallHint = isIOS() && !isStandalone() && !installHintDismissed;
+
+  const handleDismissInstallHint = () => {
+    setStoredInstallHintDismissed();
+    setInstallHintDismissed(true);
+  };
 
   // Track the current local day to detect midnight day rollover
   const [currentDate, setCurrentDate] = useState(() => todayLocal());
@@ -343,7 +358,7 @@ export function App() {
       )}
 
       <main className="app-main">
-        {activeTab === 'today' ? (
+        {activeTab === 'today' && (
           <TodayScreen
             todayDate={currentDate}
             currentYear={currentYear}
@@ -352,6 +367,8 @@ export function App() {
             todayLog={todayLog}
             unloggedCount={unloggedDates.length}
             isSaving={isSaving}
+            showInstallHint={showInstallHint}
+            onDismissInstallHint={handleDismissInstallHint}
             onReviewUnlogged={() => {
               setHistoryViewingMemberId(signedInMember.id);
               setHistoryInitialOnlyUnlogged(true);
@@ -362,7 +379,8 @@ export function App() {
             onSaveToday={handleSaveToday}
             onClearToday={handleClearToday}
           />
-        ) : (
+        )}
+        {activeTab === 'history' && (
           <HistoryScreen
             currentYear={currentYear}
             todayDate={currentDate}
@@ -379,6 +397,7 @@ export function App() {
             onClearDayLog={handleClearDayLog}
           />
         )}
+        {activeTab === 'settings' && <SettingsScreen />}
       </main>
 
       <TabBar activeTab={activeTab} onTabChange={setActiveTab} />

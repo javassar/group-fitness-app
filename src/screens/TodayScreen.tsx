@@ -1,4 +1,5 @@
 import type { DayLog, DayStatus, GroupStatsRow } from '../data/types';
+import { InstallHint } from '../components/InstallHint';
 import { StatsList } from '../components/StatsList';
 import { TodayCard } from '../components/TodayCard';
 
@@ -10,6 +11,8 @@ interface TodayScreenProps {
   todayLog: DayLog | null;
   unloggedCount: number;
   isSaving: boolean;
+  showInstallHint: boolean;
+  onDismissInstallHint: () => void;
   onReviewUnlogged: () => void;
   onSelectMember: (memberId: string) => void;
   onSaveToday: (status: DayStatus, note: string | null) => Promise<void>;
@@ -24,6 +27,8 @@ export function TodayScreen({
   todayLog,
   unloggedCount,
   isSaving,
+  showInstallHint,
+  onDismissInstallHint,
   onReviewUnlogged,
   onSelectMember,
   onSaveToday,
@@ -31,6 +36,8 @@ export function TodayScreen({
 }: TodayScreenProps) {
   return (
     <div className="screen-content">
+      {showInstallHint && <InstallHint onDismiss={onDismissInstallHint} />}
+
       {unloggedCount > 0 && (
         <aside className="unlogged-banner" aria-label="Unlogged days notice">
           <span className="unlogged-banner-text">
