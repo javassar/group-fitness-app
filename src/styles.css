@@ -415,8 +415,8 @@ input {
 }
 
 .status-badge.rest {
-  background-color: var(--rest-bg);
-  color: var(--rest-color);
+  background-color: var(--danger-bg);
+  color: var(--danger-color);
 }
 
 .stats-percent {
@@ -490,14 +490,15 @@ input {
 
 .today-actions {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  margin-top: 4px;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 28px;
+  margin: 6px 0 12px;
 }
 
-/* Large circular primary button with short transition */
-.btn-workout {
+/* Circular action buttons with short transition */
+.btn-choice {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -505,9 +506,9 @@ input {
   min-height: 44px;
 }
 
-.btn-workout-circle {
-  width: 88px;
-  height: 88px;
+.btn-circle {
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   background-color: var(--bg-card-muted);
   border: 3px solid var(--border-subtle);
@@ -515,14 +516,22 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Short transition on the check button per spec */
+  /* Short transition on the buttons per spec */
   transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
+.btn-choice-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+  text-align: center;
+}
+
+/* Green "Worked out" button */
 .btn-workout:hover:not(:disabled) .btn-workout-circle {
   border-color: var(--success-color);
   color: var(--success-color);
-  transform: scale(1.03);
+  transform: scale(1.04);
 }
 
 .btn-workout.is-selected .btn-workout-circle {
@@ -531,37 +540,20 @@ input {
   color: var(--success-color);
 }
 
-.btn-workout-label {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--text-main);
+/* Red "No workout today" button */
+.btn-no-workout:hover:not(:disabled) .btn-no-workout-circle {
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+  transform: scale(1.04);
 }
 
-/* Secondary "No workout today" button */
-.btn-no-workout {
-  min-height: 44px;
-  padding: 8px 16px;
-  background-color: var(--bg-card-muted);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-muted);
+.btn-no-workout.is-selected .btn-no-workout-circle {
+  background-color: var(--danger-bg);
+  border-color: var(--danger-color);
+  color: var(--danger-color);
 }
 
-.btn-no-workout:hover:not(:disabled) {
-  border-color: var(--border-subtle);
-}
-
-.btn-no-workout.is-selected {
-  background-color: var(--rest-bg);
-  border-color: var(--rest-border);
-  color: var(--text-main);
-  font-weight: 600;
-}
-
-.btn-workout:disabled,
-.btn-no-workout:disabled {
+.btn-choice:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

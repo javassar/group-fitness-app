@@ -1,6 +1,6 @@
 import type { GroupStatsRow } from '../data/types';
 import { computeStats } from '../lib/stats';
-import { CheckIcon, DashIcon } from './Icons';
+import { CheckIcon, XIcon } from './Icons';
 
 interface StatsListProps {
   rows: GroupStatsRow[];
@@ -22,6 +22,10 @@ export function StatsList({
   }));
 
   items.sort((a, b) => {
+    // The signed-in user is always displayed first at the top
+    if (a.row.memberId === signedInMemberId) return -1;
+    if (b.row.memberId === signedInMemberId) return 1;
+
     if (a.stats.percent === null && b.stats.percent === null) {
       return a.row.name.localeCompare(b.row.name);
     }
@@ -59,7 +63,7 @@ export function StatsList({
                 )}
                 {row.todayStatus === 'no_workout' && (
                   <span className="status-badge rest" title="No workout today" aria-label="No workout today">
-                    <DashIcon size={14} />
+                    <XIcon size={14} />
                   </span>
                 )}
               </div>

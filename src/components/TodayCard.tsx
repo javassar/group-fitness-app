@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { DayStatus } from '../data/types';
 import { formatDateLong } from '../lib/dates';
-import { CheckIcon } from './Icons';
+import { CheckIcon, XIcon } from './Icons';
 
 interface TodayCardProps {
   todayDate: string;
@@ -45,6 +45,34 @@ export function TodayCard({
     <section className="today-card" aria-label="Today log card">
       <h2 className="today-date-label">{formatDateLong(todayDate)}</h2>
 
+      <div className="today-actions">
+        <button
+          type="button"
+          className={`btn-choice btn-workout ${currentStatus === 'worked_out' ? 'is-selected' : ''}`}
+          onClick={() => handleStatusClick('worked_out')}
+          disabled={isSaving}
+          aria-pressed={currentStatus === 'worked_out'}
+        >
+          <span className="btn-circle btn-workout-circle">
+            <CheckIcon size={32} />
+          </span>
+          <span className="btn-choice-label">Worked out</span>
+        </button>
+
+        <button
+          type="button"
+          className={`btn-choice btn-no-workout ${currentStatus === 'no_workout' ? 'is-selected' : ''}`}
+          onClick={() => handleStatusClick('no_workout')}
+          disabled={isSaving}
+          aria-pressed={currentStatus === 'no_workout'}
+        >
+          <span className="btn-circle btn-no-workout-circle">
+            <XIcon size={32} />
+          </span>
+          <span className="btn-choice-label">No workout today</span>
+        </button>
+      </div>
+
       <div className="note-input-container">
         <label htmlFor="today-note-input" className="sr-only">
           What did you do? (optional)
@@ -59,31 +87,6 @@ export function TodayCard({
           onChange={(e) => setNote(e.target.value)}
           disabled={isSaving}
         />
-      </div>
-
-      <div className="today-actions">
-        <button
-          type="button"
-          className={`btn-workout ${currentStatus === 'worked_out' ? 'is-selected' : ''}`}
-          onClick={() => handleStatusClick('worked_out')}
-          disabled={isSaving}
-          aria-pressed={currentStatus === 'worked_out'}
-        >
-          <span className="btn-workout-circle">
-            <CheckIcon size={32} />
-          </span>
-          <span className="btn-workout-label">Worked out</span>
-        </button>
-
-        <button
-          type="button"
-          className={`btn-no-workout ${currentStatus === 'no_workout' ? 'is-selected' : ''}`}
-          onClick={() => handleStatusClick('no_workout')}
-          disabled={isSaving}
-          aria-pressed={currentStatus === 'no_workout'}
-        >
-          No workout today
-        </button>
       </div>
 
       {currentStatus !== null && (
