@@ -866,6 +866,20 @@ input {
   color: var(--success-color);
 }
 
+.settings-test-success {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--success-color);
+  margin: 0;
+}
+
+.settings-test-error {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--danger-color);
+  margin: 0;
+}
+
 .reminders-active-group {
   display: flex;
   flex-direction: column;

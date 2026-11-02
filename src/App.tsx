@@ -410,6 +410,7 @@ export function App() {
           <SettingsScreen
             client={client}
             signedInMemberId={signedInMember.id}
+            passcode={passcode}
             todayDate={currentDate}
           />
         )}

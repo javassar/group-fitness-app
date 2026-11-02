@@ -68,3 +68,25 @@ export function extractSubscriptionKeys(sub: PushSubscription): {
   const auth = json.keys?.auth ?? '';
   return { endpoint, p256dh, auth };
 }
+
+export async function sendTestNotification(passcode: string, memberId: string): Promise<void> {
+  const response = await fetch('/api/send-test', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ passcode, memberId }),
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const errorMsg = data?.error || `Request failed with status ${response.status}`;
+    throw new Error(errorMsg);
+  }
+
+  if (data?.sent === 0 && data?.failed > 0) {
+    throw new Error('Test notification failed to send.');
+  }
+}
+

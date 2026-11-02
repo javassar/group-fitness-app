@@ -5,6 +5,7 @@ import { isIOS, isPushSupported, isStandalone } from '../lib/platform';
 import {
   extractSubscriptionKeys,
   getExistingSubscription,
+  sendTestNotification,
   subscribeToPush,
   unsubscribeFromPush,
 } from '../lib/push';
@@ -15,14 +16,22 @@ import { PauseCard } from '../components/PauseCard';
 interface SettingsScreenProps {
   client: DataClient;
   signedInMemberId: string;
+  passcode: string;
   todayDate: string;
 }
 
-export function SettingsScreen({ client, signedInMemberId, todayDate }: SettingsScreenProps) {
+export function SettingsScreen({
+  client,
+  signedInMemberId,
+  passcode,
+  todayDate,
+}: SettingsScreenProps) {
   const isDemo = isMockMode();
   const [reminderState, setReminderState] = useState<ReminderUiState>('off');
   const [pausedUntil, setPausedUntil] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSendingTest, setIsSendingTest] = useState(false);
+  const [testMessage, setTestMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
@@ -98,6 +107,7 @@ export function SettingsScreen({ client, signedInMemberId, todayDate }: Settings
   const handleTurnOff = async () => {
     setIsLoading(true);
     setErrorMessage(null);
+    setTestMessage(null);
     try {
       const endpoint = await unsubscribeFromPush();
       if (endpoint) {
@@ -109,6 +119,26 @@ export function SettingsScreen({ client, signedInMemberId, todayDate }: Settings
       setErrorMessage(msg);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSendTest = async () => {
+    setIsSendingTest(true);
+    setTestMessage(null);
+    try {
+      await sendTestNotification(passcode, signedInMemberId);
+      setTestMessage({
+        type: 'success',
+        text: 'Sent. It should arrive in a few seconds.',
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setTestMessage({
+        type: 'error',
+        text: msg,
+      });
+    } finally {
+      setIsSendingTest(false);
     }
   };
 
@@ -149,8 +179,11 @@ export function SettingsScreen({ client, signedInMemberId, todayDate }: Settings
         state={reminderState}
         isDemo={isDemo}
         isLoading={isLoading}
+        isSendingTest={isSendingTest}
+        testMessage={testMessage}
         onTurnOn={handleTurnOn}
         onTurnOff={handleTurnOff}
+        onSendTest={handleSendTest}
       />
 
       <PauseCard

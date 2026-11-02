@@ -4,6 +4,8 @@ interface RemindersCardProps {
   state: ReminderUiState;
   isDemo: boolean;
   isLoading: boolean;
+  isSendingTest?: boolean;
+  testMessage?: { type: 'success' | 'error'; text: string } | null;
   onTurnOn: () => Promise<void>;
   onTurnOff: () => Promise<void>;
   onSendTest?: () => Promise<void>;
@@ -13,6 +15,8 @@ export function RemindersCard({
   state,
   isDemo,
   isLoading,
+  isSendingTest,
+  testMessage,
   onTurnOn,
   onTurnOff,
   onSendTest,
@@ -70,19 +74,31 @@ export function RemindersCard({
                 type="button"
                 className="btn-secondary"
                 onClick={onSendTest}
-                disabled={isLoading}
+                disabled={isLoading || isSendingTest}
               >
-                Send test notification
+                {isSendingTest ? 'Sending...' : 'Send test notification'}
               </button>
               <button
                 type="button"
                 className="btn-text-danger"
                 onClick={onTurnOff}
-                disabled={isLoading}
+                disabled={isLoading || isSendingTest}
               >
                 {isLoading ? 'Turning off...' : 'Turn off reminders'}
               </button>
             </div>
+            {testMessage && (
+              <p
+                className={
+                  testMessage.type === 'success'
+                    ? 'settings-test-success'
+                    : 'settings-test-error'
+                }
+                role="status"
+              >
+                {testMessage.text}
+              </p>
+            )}
           </div>
         )}
 

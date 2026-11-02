@@ -120,3 +120,53 @@ The app is built as a static client with no server-side Node processes. It deplo
    - Click **Deploy**.
    - Once deployment completes, open the provided URL on your phone or computer.
    - Enter your group passphrase, choose your name, and verify the live connection!
+
+---
+
+## Reminders
+
+### How It Works
+
+1. **Home Screen PWA Installation**: On iOS (16.4+), web push notifications require adding the web app to the Home Screen via Safari's Share menu ("Add to Home Screen") and opening it from the Home Screen icon.
+2. **Device Push Subscription**: Tapping "Turn on reminders" in the Settings tab requests iOS notification permission and registers a Web Push subscription directly to Supabase (`push_subscriptions` table).
+3. **Daily Automated Reminder**: A Vercel Cron Job triggers `/api/send-reminders` once daily at 03:00 UTC (8:00pm Arizona time). The function checks which members have not logged today and are not paused, builds a dynamic group count message, and dispatches the notification via Apple's push service with a 1-hour TTL.
+4. **Pause Reminders**: Members can pause notifications through a chosen date on the Settings tab (persisted on the member's record in Supabase).
+
+### Environment Variables
+
+Configure these in `.env.local` (for local development) and in Vercel Project Settings (Production):
+
+- `VITE_SUPABASE_URL`: Supabase project URL (public)
+- `VITE_SUPABASE_ANON_KEY`: Supabase anon/publishable key (public)
+- `VITE_VAPID_PUBLIC_KEY`: VAPID public application server key (public)
+- `VAPID_PRIVATE_KEY`: VAPID private key (secret, set only in Vercel)
+- `VAPID_SUBJECT`: Contact URI, e.g. `mailto:youremail@example.com` (set in Vercel)
+- `CRON_SECRET`: Random secret string (32+ characters) protecting the reminder endpoint and matched against `sender_secret_hash` in Supabase (secret, set only in Vercel)
+
+*Never commit `.env.local` or write secret keys into the repository.*
+
+### Testing Reminders
+
+1. **Test notification from app**:
+   In the installed app on your iPhone, go to **Settings** and tap **Send test notification**, then immediately return to the Home Screen or lock your phone. The notification should arrive within seconds. Tapping it opens the app.
+
+2. **Forced reminder run from your computer terminal**:
+   Test the reminder pipeline by triggering a forced run from your own terminal (replace `YOUR_CRON_SECRET` and `YOUR-APP.vercel.app`):
+   ```bash
+   curl -H "Authorization: Bearer YOUR_CRON_SECRET" "https://YOUR-APP.vercel.app/api/send-reminders?force=1"
+   ```
+   The response should return `{ "targeted": ..., "sent": ..., "failed": 0, "removed": 0 }` and deliver a notification with the group log count.
+
+3. **Verify suppression when logged**:
+   Log today in the app, then repeat the forced curl command. The response should show `sent: 0` because you have already logged.
+
+4. **Verify pause suppression**:
+   Clear today's log, set a pause date through today in Settings, and repeat the forced curl command. Nothing should be sent (`sent: 0`). Remember to resume reminders after testing.
+
+5. **Verify authentication rejection**:
+   Call the reminder endpoint without the Authorization header:
+   ```bash
+   curl -i "https://YOUR-APP.vercel.app/api/send-reminders"
+   ```
+   It must return HTTP `401 Unauthorized`.
+
