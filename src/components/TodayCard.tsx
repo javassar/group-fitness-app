@@ -31,7 +31,8 @@ export function TodayCard({
 
   const handleStatusClick = async (status: DayStatus) => {
     if (isSaving) return;
-    await onSave(status, note);
+    const sanitizedNote = note.trim().slice(0, 200);
+    await onSave(status, sanitizedNote.length > 0 ? sanitizedNote : null);
   };
 
   const handleClear = async () => {

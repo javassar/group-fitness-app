@@ -177,7 +177,7 @@ export class MockDataClient implements DataClient {
       throw new Error('date out of allowed range');
     }
 
-    const trimmedNote = note ? note.trim() : null;
+    const trimmedNote = note ? note.trim().slice(0, 200) : null;
     this.logs.set(`${memberId}:${date}`, {
       date,
       status,

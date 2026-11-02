@@ -50,7 +50,7 @@ export function HistoryScreen({
     : allDates;
 
   const handleRowClick = (date: string) => {
-    if (!isSelf) return;
+    if (!isSelf || isSaving) return;
     setExpandedDate((prev) => (prev === date ? null : date));
   };
 

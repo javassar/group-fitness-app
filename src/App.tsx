@@ -96,6 +96,8 @@ export function App() {
       const localTz = deviceTimeZone();
       if (signedInMember && signedInMember.timeZone !== localTz) {
         await client.setMemberTimeZone(signedInMember.id, localTz);
+        signedInMember.timeZone = localTz;
+        setMembers([...memberList]);
       }
 
       // 2. Fetch stats and member logs
@@ -136,13 +138,18 @@ export function App() {
       loadData();
     };
 
+    const handleForeground = () => {
+      checkRolloverAndReload();
+    };
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        checkRolloverAndReload();
+        handleForeground();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleForeground);
     // Periodic check for midnight rollover
     const rolloverInterval = setInterval(() => {
       const nowLocal = todayLocal();
@@ -154,6 +161,7 @@ export function App() {
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleForeground);
       clearInterval(rolloverInterval);
     };
   }, [loadData]);

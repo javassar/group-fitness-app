@@ -22,6 +22,26 @@ interface MemberLogDbRow {
   note: string | null;
 }
 
+// Module-level singleton to avoid creating multiple GoTrueClient instances
+let cachedClient: SupabaseClient | null = null;
+let cachedKey = '';
+
+function getSupabaseClient(url: string, key: string): SupabaseClient {
+  const cacheKey = `${url}:${key}`;
+  if (cachedClient && cachedKey === cacheKey) {
+    return cachedClient;
+  }
+  cachedClient = createClient(url, key, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+  cachedKey = cacheKey;
+  return cachedClient;
+}
+
 export class SupabaseDataClient implements DataClient {
   private client: SupabaseClient;
   private passcode: string;
@@ -29,13 +49,7 @@ export class SupabaseDataClient implements DataClient {
   constructor(supabaseUrl: string, supabaseAnonKey: string, passcode: string) {
     this.passcode = passcode;
     // Auth is not used; sessions are disabled per SPEC section 6.3
-    this.client = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-      },
-    });
+    this.client = getSupabaseClient(supabaseUrl, supabaseAnonKey);
   }
 
   async checkPasscode(passcode: string): Promise<boolean> {
@@ -113,12 +127,13 @@ export class SupabaseDataClient implements DataClient {
     status: DayStatus,
     note: string | null
   ): Promise<void> {
+    const trimmedNote = note ? note.trim().slice(0, 200) : null;
     const { error } = await this.client.rpc('set_day_log', {
       p_passcode: this.passcode,
       p_member_id: memberId,
       p_log_date: date,
       p_status: status,
-      p_note: note,
+      p_note: trimmedNote && trimmedNote.length > 0 ? trimmedNote : null,
     });
     if (error) {
       throw new Error(error.message);

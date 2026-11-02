@@ -22,7 +22,8 @@ export function DayEditor({
 
   const handleSave = async (status: DayStatus) => {
     if (isSaving) return;
-    await onSave(status, note);
+    const sanitizedNote = note.trim().slice(0, 200);
+    await onSave(status, sanitizedNote.length > 0 ? sanitizedNote : null);
   };
 
   const handleClear = async () => {
@@ -75,6 +76,7 @@ export function DayEditor({
           className="btn-editor-action btn-editor-clear"
           onClick={handleClear}
           disabled={isSaving || currentStatus === null}
+          aria-label={`Clear log for ${date}`}
         >
           Clear
         </button>
