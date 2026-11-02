@@ -1,5 +1,6 @@
-import type { DayLog, DayStatus, GroupStatsRow, MemberGoal } from '../data/types';
+import type { DayLog, DayStatus, GoalChange, GroupStatsRow, MemberGoal } from '../data/types';
 import { GoalCard } from '../components/GoalCard';
+import { GoalChangesList } from '../components/GoalChangesList';
 import { InstallHint } from '../components/InstallHint';
 import { StatsList } from '../components/StatsList';
 import { TodayCard } from '../components/TodayCard';
@@ -17,6 +18,7 @@ interface TodayScreenProps {
   isSaving: boolean;
   showInstallHint: boolean;
   memberGoals?: MemberGoal[];
+  goalChanges?: GoalChange[];
   onDismissInstallHint: () => void;
   onReviewUnlogged: () => void;
   onSelectMember: (memberId: string) => void;
@@ -36,6 +38,7 @@ export function TodayScreen({
   isSaving,
   showInstallHint,
   memberGoals,
+  goalChanges,
   onDismissInstallHint,
   onReviewUnlogged,
   onSelectMember,
@@ -101,6 +104,10 @@ export function TodayScreen({
         memberGoals={memberGoals}
         onSelectMember={onSelectMember}
       />
+
+      {currentYear >= GOALS_START_YEAR && (
+        <GoalChangesList changes={goalChanges ?? []} />
+      )}
     </div>
   );
 }

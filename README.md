@@ -11,6 +11,7 @@ A lightweight, mobile-first web app for a group of five friends to track daily w
 - **History log & backfilling**: View every day from today back to January 1, filter by unlogged days, and backfill or edit past days.
 - **Passcode security**: Protected by a shared group passphrase verified on the database. No passwords or email accounts required.
 - **Dual modes**: Fully functional offline/demo mock mode with deterministic fake data, or live mode connected to Supabase Postgres.
+- **Yearly goals**: Annual commitments (days or percent) with live on-pace status, typed passage friction for revisions, and group change logs.
 
 ---
 
@@ -84,6 +85,17 @@ Verify production build and TypeScript strict types:
 ```bash
 npm run build
 ```
+
+---
+
+## Goals
+
+Starting in 2027, each member commits to one goal per year the first time they open the app that year.
+
+- **Goal types**: Members choose either a fixed number of workout days (e.g. 180 days) or a percentage of days (e.g. 50%).
+- **Pace tracking**: Every time the app opens, the Today tab shows whether the member is on track or behind pace (with days ahead or needed to catch up), calculated using pure integer arithmetic matching the percentage rules.
+- **Change friction**: Goals can be updated, but doing so requires typing an excerpt from a Shakespeare sonnet with zero typos. Smart punctuation, paste, and drop are blocked in the browser. One mistake resets the passage.
+- **Group visibility**: The whole group can see each member's goal and how many times it was changed. A collapsible "Goal changes" log lists the history of updates.
 
 ---
 

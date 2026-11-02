@@ -4,6 +4,7 @@ import type {
   DayLog,
   DayStatus,
   Goal,
+  GoalChange,
   GroupStatsRow,
   Member,
   MemberGoal,
@@ -24,6 +25,7 @@ import {
 import { PasscodeScreen } from './screens/PasscodeScreen';
 import { NamePickerScreen } from './screens/NamePickerScreen';
 import { GoalSetupScreen } from './screens/GoalSetupScreen';
+import { GoalChangeScreen } from './screens/GoalChangeScreen';
 import { TodayScreen } from './screens/TodayScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -43,6 +45,8 @@ export function App() {
   const [memberLogs, setMemberLogs] = useState<DayLog[]>([]);
   const [viewingMemberLogs, setViewingMemberLogs] = useState<DayLog[]>([]);
   const [memberGoals, setMemberGoals] = useState<MemberGoal[]>([]);
+  const [goalChanges, setGoalChanges] = useState<GoalChange[]>([]);
+  const [isChangingGoal, setIsChangingGoal] = useState(false);
 
   const [activeTab, setActiveTab] = useState<TabType>('today');
   const [historyViewingMemberId, setHistoryViewingMemberId] = useState<string | null>(null);
@@ -136,12 +140,17 @@ export function App() {
       const logs = await client.getMemberLogs(memberId, currentYear);
       setMemberLogs(logs);
 
-      // 3. Fetch goals if at or past start year
+      // 3. Fetch goals and goal changes if at or past start year
       if (currentYear >= GOALS_START_YEAR) {
-        const goals = await client.getGoals(currentYear);
+        const [goals, changes] = await Promise.all([
+          client.getGoals(currentYear),
+          client.getGoalChanges(currentYear),
+        ]);
         setMemberGoals(goals);
+        setGoalChanges(changes);
       } else {
         setMemberGoals([]);
+        setGoalChanges([]);
       }
 
       // If viewing another member's history, load their logs too
@@ -211,6 +220,8 @@ export function App() {
     setMemberId(null);
     setHistoryViewingMemberId(null);
     setMemberGoals([]);
+    setGoalChanges([]);
+    setIsChangingGoal(false);
     setHasLoadedInitial(false);
     setActiveTab('today');
 
@@ -376,6 +387,26 @@ export function App() {
     );
   }
 
+  // Full-screen goal change flow (SPEC-3.md section 6.5)
+  if (isChangingGoal && signedInGoal) {
+    return (
+      <GoalChangeScreen
+        currentGoal={signedInGoal.goal}
+        year={currentYear}
+        onSaveGoal={async (newGoal) => {
+          await handleSaveGoal(newGoal);
+          setIsChangingGoal(false);
+        }}
+        onCancel={() => {
+          setGoalErrorMessage(null);
+          setIsChangingGoal(false);
+        }}
+        isSaving={isSaving}
+        errorMessage={goalErrorMessage}
+      />
+    );
+  }
+
   const signedInMember = members.find((m) => m.id === memberId) ?? {
     id: memberId,
     name: 'You',
@@ -438,6 +469,7 @@ export function App() {
             isSaving={isSaving}
             showInstallHint={showInstallHint}
             memberGoals={memberGoals}
+            goalChanges={goalChanges}
             onDismissInstallHint={handleDismissInstallHint}
             onReviewUnlogged={() => {
               setHistoryViewingMemberId(signedInMember.id);
@@ -448,6 +480,7 @@ export function App() {
             onSelectMember={handleSelectMemberFromStats}
             onSaveToday={handleSaveToday}
             onClearToday={handleClearToday}
+            onOpenGoalChange={() => setIsChangingGoal(true)}
           />
         )}
         {activeTab === 'history' && (
