@@ -480,7 +480,6 @@ export function App() {
             onSelectMember={handleSelectMemberFromStats}
             onSaveToday={handleSaveToday}
             onClearToday={handleClearToday}
-            onOpenGoalChange={() => setIsChangingGoal(true)}
           />
         )}
         {activeTab === 'history' && (
@@ -506,6 +505,9 @@ export function App() {
             signedInMemberId={signedInMember.id}
             passcode={passcode}
             todayDate={currentDate}
+            currentGoal={signedInGoal?.goal ?? null}
+            currentYear={currentYear}
+            onChangeGoal={() => setIsChangingGoal(true)}
           />
         )}
       </main>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { DataClient } from '../data/types';
+import type { DataClient, Goal } from '../data/types';
 import { isMockMode } from '../data';
+import { describeGoal, GOALS_START_YEAR } from '../lib/goals';
 import { isIOS, isPushSupported, isStandalone } from '../lib/platform';
 import {
   extractSubscriptionKeys,
@@ -18,6 +19,9 @@ interface SettingsScreenProps {
   signedInMemberId: string;
   passcode: string;
   todayDate: string;
+  currentGoal?: Goal | null;
+  currentYear?: number;
+  onChangeGoal?: () => void;
 }
 
 export function SettingsScreen({
@@ -25,6 +29,9 @@ export function SettingsScreen({
   signedInMemberId,
   passcode,
   todayDate,
+  currentGoal,
+  currentYear,
+  onChangeGoal,
 }: SettingsScreenProps) {
   const isDemo = isMockMode();
   const [reminderState, setReminderState] = useState<ReminderUiState>('off');
@@ -173,6 +180,26 @@ export function SettingsScreen({
             Dismiss
           </button>
         </div>
+      )}
+
+      {currentYear !== undefined && currentYear >= GOALS_START_YEAR && currentGoal && (
+        <section className="settings-card" aria-label="Yearly goal settings">
+          <h2 className="settings-card-title">{currentYear} Goal</h2>
+          <div className="settings-section-body">
+            <p className="settings-explanation">
+              Your goal is currently set to <strong>{describeGoal(currentGoal, currentYear)}</strong>.
+            </p>
+            <div className="settings-btn-row">
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={onChangeGoal}
+              >
+                Change Goal
+              </button>
+            </div>
+          </div>
+        </section>
       )}
 
       <RemindersCard

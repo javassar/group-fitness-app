@@ -24,7 +24,6 @@ interface TodayScreenProps {
   onSelectMember: (memberId: string) => void;
   onSaveToday: (status: DayStatus, note: string | null) => Promise<void>;
   onClearToday: () => Promise<void>;
-  onOpenGoalChange?: () => void;
 }
 
 export function TodayScreen({
@@ -44,7 +43,6 @@ export function TodayScreen({
   onSelectMember,
   onSaveToday,
   onClearToday,
-  onOpenGoalChange,
 }: TodayScreenProps) {
   const signedInGoal = memberGoals?.find((g) => g.memberId === signedInMemberId);
   const signedInRow = statsRows.find((r) => r.memberId === signedInMemberId);
@@ -93,7 +91,6 @@ export function TodayScreen({
           goal={signedInGoal.goal}
           year={currentYear}
           status={goalStatus}
-          onChangeGoal={onOpenGoalChange}
         />
       )}
 
