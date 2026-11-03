@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import type { DayLog, DayStatus, GoalChange, GroupStatsRow, MemberGoal } from '../data/types';
+import type {
+  DayLog,
+  DayStatus,
+  GoalChange,
+  GroupStatsRow,
+  MemberGoal,
+  MemberPause,
+} from '../data/types';
 import { GoalCard } from '../components/GoalCard';
 import { GoalChangesList } from '../components/GoalChangesList';
 import { InstallHint } from '../components/InstallHint';
@@ -11,6 +18,7 @@ import {
   computeRequiredWeeklyPace,
   GOALS_START_YEAR,
 } from '../lib/goals';
+import { computeMemberPauseSummary } from '../lib/pauses';
 import { computeStats } from '../lib/stats';
 
 interface TodayScreenProps {
@@ -25,9 +33,11 @@ interface TodayScreenProps {
   showInstallHint: boolean;
   memberGoals?: MemberGoal[];
   goalChanges?: GoalChange[];
+  memberPauses?: MemberPause[];
   isAlertDismissed?: boolean;
   onDismissAlert?: () => void;
   onChangeGoal?: (skipPassage?: boolean) => void;
+  onGoToSettings?: () => void;
   onDismissInstallHint: () => void;
   onReviewUnlogged: () => void;
   onSelectMember: (memberId: string) => void;
@@ -47,9 +57,11 @@ export function TodayScreen({
   showInstallHint,
   memberGoals,
   goalChanges,
+  memberPauses,
   isAlertDismissed,
   onDismissAlert,
   onChangeGoal,
+  onGoToSettings,
   onDismissInstallHint,
   onReviewUnlogged,
   onSelectMember,
@@ -64,9 +76,18 @@ export function TodayScreen({
     onDismissAlert?.();
   };
 
+  const pauseSummary = computeMemberPauseSummary(
+    signedInMemberId,
+    memberPauses ?? [],
+    currentYear,
+    todayDate
+  );
+
   const signedInGoal = memberGoals?.find((g) => g.memberId === signedInMemberId);
   const signedInRow = statsRows.find((r) => r.memberId === signedInMemberId);
-  const signedInStats = signedInRow ? computeStats(currentYear, signedInRow) : null;
+  const signedInStats = signedInRow
+    ? computeStats(currentYear, signedInRow, pauseSummary.pausedDaysElapsed)
+    : null;
   const goalStatus =
     signedInGoal && signedInStats
       ? computeGoalStatus(
@@ -83,7 +104,9 @@ export function TodayScreen({
           signedInGoal.goal,
           currentYear,
           signedInStats.workoutDays,
-          todayDate
+          todayDate,
+          pauseSummary.pausedDaysCount,
+          pauseSummary.pausedDaysElapsed
         )
       : null;
 
@@ -103,6 +126,25 @@ export function TodayScreen({
           >
             Review
           </button>
+        </aside>
+      )}
+
+      {pauseSummary.isPaused && (
+        <aside className="pause-today-banner" aria-label="Tracking paused notice">
+          <div className="pause-banner-content">
+            <span className="pause-banner-text">
+              Tracking is currently paused. Enjoy your recovery / time off.
+            </span>
+            {onGoToSettings && (
+              <button
+                type="button"
+                className="btn-pause-resume-link"
+                onClick={onGoToSettings}
+              >
+                Resume in Settings &rarr;
+              </button>
+            )}
+          </div>
         </aside>
       )}
 
@@ -141,6 +183,7 @@ export function TodayScreen({
         currentYear={currentYear}
         signedInMemberId={signedInMemberId}
         memberGoals={memberGoals}
+        memberPauses={memberPauses}
         onSelectMember={onSelectMember}
       />
 

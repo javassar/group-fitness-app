@@ -7,8 +7,9 @@ import type {
   GroupStatsRow,
   Member,
   MemberGoal,
+  MemberPause,
 } from './types';
-import { deviceTimeZone, getDateRangeDescending, todayLocal } from '../lib/dates';
+import { deviceTimeZone, getDateRangeDescending, getYesterday, todayLocal } from '../lib/dates';
 
 // Simple deterministic Linear Congruential Generator (LCG) pseudo-random function.
 // Using a fixed seed guarantees identical fake data on every reload.
@@ -31,6 +32,7 @@ export class MockDataClient implements DataClient {
   // Key format: `${memberId}:${year}`
   private memberGoals: Map<string, { goal: Goal; changeCount: number }> = new Map();
   private goalChanges: (GoalChange & { year: number })[] = [];
+  private memberPauses: MemberPause[] = [];
 
   constructor(passcode: string) {
     this.passcode = passcode;
@@ -277,5 +279,37 @@ export class MockDataClient implements DataClient {
       .filter((c) => c.year === year)
       .slice(0, 20)
       .map(({ year: _y, ...rest }) => rest);
+  }
+
+  async getMemberPauses(year: number): Promise<MemberPause[]> {
+    this.assertPasscode();
+    return this.memberPauses.filter((p) => p.year === year);
+  }
+
+  async setMemberPause(memberId: string, year: number, isPaused: boolean): Promise<void> {
+    this.assertPasscode();
+    const today = todayLocal();
+    const activePause = this.memberPauses.find(
+      (p) => p.memberId === memberId && p.year === year && p.endDate === null
+    );
+
+    if (isPaused) {
+      if (!activePause) {
+        this.memberPauses.push({
+          memberId,
+          year,
+          startDate: today,
+          endDate: null,
+        });
+      }
+    } else {
+      if (activePause) {
+        if (today > activePause.startDate) {
+          activePause.endDate = getYesterday(today);
+        } else {
+          activePause.endDate = today;
+        }
+      }
+    }
   }
 }

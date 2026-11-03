@@ -101,16 +101,20 @@ export function computeRequiredWeeklyPace(
   goal: Goal,
   year: number,
   workoutsCompleted: number,
-  todayDateStr: string
+  todayDateStr: string,
+  pausedDaysCount = 0,
+  pausedDaysElapsed = 0
 ): DynamicPaceResult {
   const totalDaysInYear = daysInYear(year);
+  const effectiveTotalDays = Math.max(1, totalDaysInYear - pausedDaysCount);
   const workoutsGoal =
     goal.type === 'days'
       ? goal.value
-      : Math.round(totalDaysInYear * (goal.value / 100));
+      : Math.round(effectiveTotalDays * (goal.value / 100));
   const workoutsNeeded = Math.max(0, workoutsGoal - workoutsCompleted);
   const currentDayOfYear = dayOfYear(todayDateStr);
-  const daysRemaining = Math.max(1, totalDaysInYear - currentDayOfYear);
+  const activeDaysElapsed = Math.max(0, currentDayOfYear - pausedDaysElapsed);
+  const daysRemaining = Math.max(1, effectiveTotalDays - activeDaysElapsed);
   const paceRequired = (workoutsNeeded / daysRemaining) * 7;
   const isUnfeasible = paceRequired > 7.0 || workoutsNeeded > daysRemaining;
 

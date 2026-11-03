@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { DataClient, Goal } from '../data/types';
+import type { DataClient, Goal, MemberPause } from '../data/types';
 import { isMockMode } from '../data';
 import { describeGoal, GOALS_START_YEAR } from '../lib/goals';
+import { computeMemberPauseSummary } from '../lib/pauses';
 import { isIOS, isPushSupported, isStandalone } from '../lib/platform';
 import {
   extractSubscriptionKeys,
@@ -13,6 +14,7 @@ import {
 import { getReminderUiState, type ReminderUiState } from '../lib/reminderState';
 import { RemindersCard } from '../components/RemindersCard';
 import { PauseCard } from '../components/PauseCard';
+import { VacationPauseCard } from '../components/VacationPauseCard';
 
 interface SettingsScreenProps {
   client: DataClient;
@@ -21,6 +23,8 @@ interface SettingsScreenProps {
   todayDate: string;
   currentGoal?: Goal | null;
   currentYear?: number;
+  memberPauses?: MemberPause[];
+  onToggleMemberPause?: () => Promise<void>;
   onChangeGoal?: () => void;
 }
 
@@ -31,12 +35,15 @@ export function SettingsScreen({
   todayDate,
   currentGoal,
   currentYear,
+  memberPauses,
+  onToggleMemberPause,
   onChangeGoal,
 }: SettingsScreenProps) {
   const isDemo = isMockMode();
   const [reminderState, setReminderState] = useState<ReminderUiState>('off');
   const [pausedUntil, setPausedUntil] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTogglingPause, setIsTogglingPause] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
   const [testMessage, setTestMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -163,6 +170,28 @@ export function SettingsScreen({
     }
   };
 
+  const effectiveYear = currentYear ?? parseInt(todayDate.slice(0, 4), 10);
+  const pauseSummary = computeMemberPauseSummary(
+    signedInMemberId,
+    memberPauses ?? [],
+    effectiveYear,
+    todayDate
+  );
+
+  const handleTogglePause = async () => {
+    if (!onToggleMemberPause) return;
+    setIsTogglingPause(true);
+    setErrorMessage(null);
+    try {
+      await onToggleMemberPause();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorMessage(msg);
+    } finally {
+      setIsTogglingPause(false);
+    }
+  };
+
   return (
     <div className="screen-content">
       <div className="settings-header">
@@ -201,6 +230,14 @@ export function SettingsScreen({
           </div>
         </section>
       )}
+
+      <VacationPauseCard
+        isPaused={pauseSummary.isPaused}
+        pausedAt={pauseSummary.pausedAt}
+        pausedDaysCount={pauseSummary.pausedDaysCount}
+        isLoading={isTogglingPause}
+        onTogglePause={handleTogglePause}
+      />
 
       <RemindersCard
         state={reminderState}

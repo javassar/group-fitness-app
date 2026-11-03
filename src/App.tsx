@@ -8,10 +8,12 @@ import type {
   GroupStatsRow,
   Member,
   MemberGoal,
+  MemberPause,
 } from './data/types';
 import { createDataClient, isMockMode } from './data';
 import { deviceTimeZone, getUnloggedDates, todayLocal } from './lib/dates';
 import { GOALS_START_YEAR } from './lib/goals';
+import { computeMemberPauseSummary } from './lib/pauses';
 import { isIOS, isStandalone } from './lib/platform';
 import { unsubscribeFromPush } from './lib/push';
 import {
@@ -46,6 +48,7 @@ export function App() {
   const [viewingMemberLogs, setViewingMemberLogs] = useState<DayLog[]>([]);
   const [memberGoals, setMemberGoals] = useState<MemberGoal[]>([]);
   const [goalChanges, setGoalChanges] = useState<GoalChange[]>([]);
+  const [memberPauses, setMemberPauses] = useState<MemberPause[]>([]);
   const [isChangingGoal, setIsChangingGoal] = useState(false);
   const [skipFrictionPassage, setSkipFrictionPassage] = useState(false);
   const [isUnfeasibleAlertDismissed, setIsUnfeasibleAlertDismissed] = useState(false);
@@ -142,17 +145,22 @@ export function App() {
       const logs = await client.getMemberLogs(memberId, currentYear);
       setMemberLogs(logs);
 
-      // 3. Fetch goals and goal changes if at or past start year
+      // 3. Fetch goals, goal changes, and pauses
+      const pausesPromise = client.getMemberPauses(currentYear);
       if (currentYear >= GOALS_START_YEAR) {
-        const [goals, changes] = await Promise.all([
+        const [goals, changes, pauses] = await Promise.all([
           client.getGoals(currentYear),
           client.getGoalChanges(currentYear),
+          pausesPromise,
         ]);
         setMemberGoals(goals);
         setGoalChanges(changes);
+        setMemberPauses(pauses);
       } else {
         setMemberGoals([]);
         setGoalChanges([]);
+        const pauses = await pausesPromise;
+        setMemberPauses(pauses);
       }
 
       // If viewing another member's history, load their logs too
@@ -223,6 +231,7 @@ export function App() {
     setHistoryViewingMemberId(null);
     setMemberGoals([]);
     setGoalChanges([]);
+    setMemberPauses([]);
     setIsChangingGoal(false);
     setSkipFrictionPassage(false);
     setIsUnfeasibleAlertDismissed(false);
@@ -304,6 +313,20 @@ export function App() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Toggle vacation / injury pause for signed-in member
+  const handleToggleMemberPause = async () => {
+    if (!memberId) return;
+    const summary = computeMemberPauseSummary(
+      memberId,
+      memberPauses,
+      currentYear,
+      currentDate
+    );
+    const newPausedState = !summary.isPaused;
+    await client.setMemberPause(memberId, currentYear, newPausedState);
+    await loadData();
   };
 
   // Save or clear past day log from History
@@ -427,9 +450,17 @@ export function App() {
   // Find signed-in member's today log
   const todayLog = memberLogs.find((l) => l.date === currentDate) ?? null;
 
-  // Unlogged days calculation
+  // Unlogged days calculation (excluding days when signed-in member was paused)
   const loggedDateSet = new Set(memberLogs.map((l) => l.date));
-  const unloggedDates = getUnloggedDates(currentYear, currentDate, loggedDateSet);
+  const rawUnloggedDates = getUnloggedDates(currentYear, currentDate, loggedDateSet);
+  const signedInPauseSummary = computeMemberPauseSummary(
+    signedInMember.id,
+    memberPauses,
+    currentYear,
+    currentDate
+  );
+  const pausedDatesSet = new Set(signedInPauseSummary.pausedDates);
+  const unloggedDates = rawUnloggedDates.filter((d) => !pausedDatesSet.has(d));
 
   return (
     <div className="app-layout">
@@ -478,6 +509,8 @@ export function App() {
             showInstallHint={showInstallHint}
             memberGoals={memberGoals}
             goalChanges={goalChanges}
+            memberPauses={memberPauses}
+            onGoToSettings={() => setActiveTab('settings')}
             onDismissInstallHint={handleDismissInstallHint}
             onReviewUnlogged={() => {
               setHistoryViewingMemberId(signedInMember.id);
@@ -504,6 +537,7 @@ export function App() {
             signedInMemberId={signedInMember.id}
             logs={viewingId === memberId ? memberLogs : viewingMemberLogs}
             isSaving={isSaving}
+            memberPauses={memberPauses}
             initialOnlyUnlogged={historyInitialOnlyUnlogged}
             onBackToSelf={() => {
               setHistoryViewingMemberId(signedInMember.id);
@@ -521,6 +555,8 @@ export function App() {
             todayDate={currentDate}
             currentGoal={signedInGoal?.goal ?? null}
             currentYear={currentYear}
+            memberPauses={memberPauses}
+            onToggleMemberPause={handleToggleMemberPause}
             onChangeGoal={() => {
               setSkipFrictionPassage(false);
               setIsChangingGoal(true);

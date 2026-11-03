@@ -7,7 +7,11 @@ export interface MemberStats {
   percent: number | null;
 }
 
-export function computeStats(year: number, row: GroupStatsRow): MemberStats {
+export function computeStats(
+  year: number,
+  row: GroupStatsRow,
+  pausedDaysElapsed = 0
+): MemberStats {
   const yearStart = `${year}-01-01`;
   const yearEnd = `${year}-12-31`;
 
@@ -33,10 +37,11 @@ export function computeStats(year: number, row: GroupStatsRow): MemberStats {
     workoutDays = row.workedOutBeforeToday + (row.todayStatus === 'worked_out' ? 1 : 0);
   }
 
-  const percent = daysCounted === 0 ? null : workoutDays / daysCounted;
+  const activeDaysCounted = Math.max(0, daysCounted - pausedDaysElapsed);
+  const percent = activeDaysCounted === 0 ? null : workoutDays / activeDaysCounted;
 
   return {
-    daysCounted,
+    daysCounted: activeDaysCounted,
     workoutDays,
     percent,
   };

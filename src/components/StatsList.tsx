@@ -1,5 +1,6 @@
-import type { GroupStatsRow, MemberGoal } from '../data/types';
+import type { GroupStatsRow, MemberGoal, MemberPause } from '../data/types';
 import { describeGoalShort, GOALS_START_YEAR } from '../lib/goals';
+import { computeMemberPauseSummary } from '../lib/pauses';
 import { computeStats } from '../lib/stats';
 
 interface StatsListProps {
@@ -7,6 +8,7 @@ interface StatsListProps {
   currentYear: number;
   signedInMemberId: string;
   memberGoals?: MemberGoal[];
+  memberPauses?: MemberPause[];
   onSelectMember: (memberId: string) => void;
 }
 
@@ -15,14 +17,24 @@ export function StatsList({
   currentYear,
   signedInMemberId,
   memberGoals,
+  memberPauses,
   onSelectMember,
 }: StatsListProps) {
   // Compute stats for each row and sort: percent descending (null last, ties by name)
-  const items = rows.map((row) => ({
-    row,
-    stats: computeStats(currentYear, row),
-    goal: memberGoals?.find((g) => g.memberId === row.memberId),
-  }));
+  const items = rows.map((row) => {
+    const pauseSummary = computeMemberPauseSummary(
+      row.memberId,
+      memberPauses ?? [],
+      currentYear,
+      row.memberToday
+    );
+    return {
+      row,
+      pauseSummary,
+      stats: computeStats(currentYear, row, pauseSummary.pausedDaysElapsed),
+      goal: memberGoals?.find((g) => g.memberId === row.memberId),
+    };
+  });
 
   items.sort((a, b) => {
     // The signed-in user is always displayed first at the top
@@ -42,7 +54,7 @@ export function StatsList({
 
   return (
     <div className="stats-list" role="region" aria-label="Group workout statistics">
-      {items.map(({ row, stats, goal }) => {
+      {items.map(({ row, stats, goal, pauseSummary }) => {
         const isCurrentMember = row.memberId === signedInMemberId;
         const percentDisplay =
           stats.percent !== null ? `${Math.round(stats.percent * 100)}%` : '–';
@@ -66,6 +78,9 @@ export function StatsList({
                 <div className="stats-row-name-group">
                   <span className="stats-name">{row.name}</span>
                   {isCurrentMember && <span className="stats-you-badge">YOU</span>}
+                  {pauseSummary.isPaused && (
+                    <span className="stats-paused-badge">ON LEAVE</span>
+                  )}
                   {row.todayStatus === 'worked_out' && (
                     <span
                       className="status-dot worked"

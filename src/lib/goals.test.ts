@@ -193,6 +193,28 @@ describe('computeRequiredWeeklyPace and formatRequiredWeeklyPace', () => {
     expect(res.isUnfeasible).toBe(false);
     expect(formatRequiredWeeklyPace(res.paceRequired)).toBe('~7.0 days / wk');
   });
+
+  it('adjusts required pace when user has been on pause', () => {
+    // 50% goal in 365-day year
+    // Without pause: W_goal = round(365 * 0.5) = 183
+    // With 14 days pause: Effective Total Days = 351 -> W_goal = round(351 * 0.5) = 176
+    // On 2026-07-02 (day 183), activeDaysElapsed = 183 - 14 = 169
+    // daysRemaining = 351 - 169 = 182
+    // If completed 90 workouts: W_needed = 176 - 90 = 86
+    // Pace_required = (86 / 182) * 7 = 3.307...
+    const res = computeRequiredWeeklyPace(
+      { type: 'percent', value: 50 },
+      year,
+      90,
+      '2026-07-02',
+      14,
+      14
+    );
+    expect(res.workoutsGoal).toBe(176);
+    expect(res.workoutsNeeded).toBe(86);
+    expect(res.daysRemaining).toBe(182);
+    expect(formatRequiredWeeklyPace(res.paceRequired)).toBe('~3.3 days / wk');
+  });
 });
 
 describe('MockDataClient goal storage and behavior', () => {

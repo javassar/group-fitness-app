@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import type { DayLog, DayStatus, Member } from '../data/types';
+import type { DayLog, DayStatus, Member, MemberPause } from '../data/types';
 import { formatDateShort, getDateRangeDescending } from '../lib/dates';
+import { computeMemberPauseSummary } from '../lib/pauses';
 import { ArrowLeftIcon, CheckIcon } from '../components/Icons';
 import { DayEditor } from '../components/DayEditor';
 
@@ -11,6 +12,7 @@ interface HistoryScreenProps {
   signedInMemberId: string;
   logs: DayLog[];
   isSaving: boolean;
+  memberPauses?: MemberPause[];
   initialOnlyUnlogged?: boolean;
   onBackToSelf: () => void;
   onSaveDayLog: (date: string, status: DayStatus, note: string | null) => Promise<void>;
@@ -24,6 +26,7 @@ export function HistoryScreen({
   signedInMemberId,
   logs,
   isSaving,
+  memberPauses,
   initialOnlyUnlogged = false,
   onBackToSelf,
   onSaveDayLog,
@@ -40,13 +43,21 @@ export function HistoryScreen({
     logsMap.set(log.date, log);
   }
 
+  const pauseSummary = computeMemberPauseSummary(
+    viewingMember.id,
+    memberPauses ?? [],
+    currentYear,
+    todayDate
+  );
+  const pausedDateSet = new Set(pauseSummary.pausedDates);
+
   // All dates from today back to January 1 of the current year, newest first
   const yearStart = `${currentYear}-01-01`;
   const allDates = getDateRangeDescending(yearStart, todayDate);
 
-  // Filter dates if "Only unlogged days" is active
+  // Filter dates if "Only unlogged days" is active (excluding paused days)
   const displayedDates = onlyUnlogged
-    ? allDates.filter((date) => !logsMap.has(date))
+    ? allDates.filter((date) => !logsMap.has(date) && !pausedDateSet.has(date))
     : allDates;
 
   const handleRowClick = (date: string) => {
@@ -154,6 +165,7 @@ export function HistoryScreen({
                 const isExpanded = isSelf && expandedDate === date;
                 const isWorkedOut = log?.status === 'worked_out';
                 const isNoWorkout = log?.status === 'no_workout';
+                const isPausedDate = !log && pausedDateSet.has(date);
 
                 return (
                   <div
@@ -165,11 +177,11 @@ export function HistoryScreen({
                       className={`ledger-row ${isSelf ? 'is-interactive' : 'is-readonly'}`}
                       onClick={() => handleRowClick(date)}
                       aria-expanded={isSelf ? isExpanded : undefined}
-                      aria-label={`${formatDateShort(date)}: ${isWorkedOut ? 'Logged' : isNoWorkout ? 'Rest' : 'Unlogged'}${log?.note ? `, note: ${log.note}` : ''}`}
+                      aria-label={`${formatDateShort(date)}: ${isWorkedOut ? 'Logged' : isNoWorkout ? 'Rest' : isPausedDate ? 'Paused' : 'Unlogged'}${log?.note ? `, note: ${log.note}` : ''}`}
                     >
                       <div className="ledger-row-left">
                         <span
-                          className={`ledger-dot ${isWorkedOut ? 'is-logged' : isNoWorkout ? 'is-rest' : 'is-unlogged'}`}
+                          className={`ledger-dot ${isWorkedOut ? 'is-logged' : isNoWorkout ? 'is-rest' : isPausedDate ? 'is-paused' : 'is-unlogged'}`}
                           aria-hidden="true"
                         />
                         <span className="ledger-date">{formatDateShort(date)}</span>
@@ -185,7 +197,10 @@ export function HistoryScreen({
                         {isNoWorkout && (
                           <span className="ledger-badge is-rest">Rest</span>
                         )}
-                        {!log && (
+                        {!log && isPausedDate && (
+                          <span className="ledger-badge is-paused">PAUSED</span>
+                        )}
+                        {!log && !isPausedDate && (
                           <span className="ledger-unlogged-dash">—</span>
                         )}
                       </div>

@@ -103,4 +103,17 @@ describe('computeStats', () => {
     expect(stats.workoutDays).toBe(0);
     expect(stats.percent).toBeNull();
   });
+
+  it('subtracts paused days from daysCounted when calculating percentage', () => {
+    const row = makeRow({
+      memberToday: '2027-03-01', // day 60, unlogged -> 59 calendar days
+      workedOutBeforeToday: 30,
+      todayStatus: null,
+    });
+    // With 9 paused days elapsed, daysCounted becomes 59 - 9 = 50
+    const stats = computeStats(2027, row, 9);
+    expect(stats.daysCounted).toBe(50);
+    expect(stats.workoutDays).toBe(30);
+    expect(stats.percent).toBe(0.6); // 30 / 50 = 60%
+  });
 });

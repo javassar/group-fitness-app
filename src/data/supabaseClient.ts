@@ -9,6 +9,7 @@ import type {
   GroupStatsRow,
   Member,
   MemberGoal,
+  MemberPause,
 } from './types';
 
 interface MemberRow {
@@ -280,5 +281,42 @@ export class SupabaseDataClient implements DataClient {
       },
       changedAt: row.changed_at,
     }));
+  }
+
+  async getMemberPauses(year: number): Promise<MemberPause[]> {
+    const { data, error } = await this.client.rpc('get_member_pauses', {
+      p_passcode: this.passcode,
+      p_year: year,
+    });
+    if (error) {
+      // Graceful fallback if table/function not yet run in Supabase
+      return [];
+    }
+    interface MemberPauseDbRow {
+      id: number;
+      member_id: string;
+      year: number;
+      start_date: string;
+      end_date: string | null;
+    }
+    return ((data as MemberPauseDbRow[]) || []).map((row) => ({
+      id: Number(row.id),
+      memberId: row.member_id,
+      year: Number(row.year),
+      startDate: row.start_date,
+      endDate: row.end_date,
+    }));
+  }
+
+  async setMemberPause(memberId: string, year: number, isPaused: boolean): Promise<void> {
+    const { error } = await this.client.rpc('set_member_pause_state', {
+      p_passcode: this.passcode,
+      p_member_id: memberId,
+      p_year: year,
+      p_is_paused: isPaused,
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
   }
 }

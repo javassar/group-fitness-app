@@ -34,6 +34,14 @@ export interface GoalChange {
   changedAt: string; // ISO timestamp
 }
 
+export interface MemberPause {
+  id?: number;
+  memberId: string;
+  year: number;
+  startDate: string; // YYYY-MM-DD
+  endDate: string | null; // null if currently active
+}
+
 export interface DataClient {
   checkPasscode(passcode: string): Promise<boolean>;
   listMembers(): Promise<Member[]>;
@@ -49,4 +57,6 @@ export interface DataClient {
   getGoals(year: number): Promise<MemberGoal[]>;
   setGoal(memberId: string, year: number, goal: Goal): Promise<void>;
   getGoalChanges(year: number): Promise<GoalChange[]>;
+  getMemberPauses(year: number): Promise<MemberPause[]>;
+  setMemberPause(memberId: string, year: number, isPaused: boolean): Promise<void>;
 }
