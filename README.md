@@ -6,27 +6,27 @@ Built for a small group of athletes to track daily workouts, normalize fair acco
 
 ---
 
-## 📱 Interface Showcase
+## Interface Showcase
 
 <p align="center">
-  <img src="docs/screenshots/today-view.png" alt="Today Screen & Dot Tracker" width="22%" onerror="this.src='https://placehold.co/390x844/120809/F5EBE6?text=Today+View+Screenshot';" />
+  <img src="docs/screenshots/today-view.PNG" alt="Today Screen, Dot Tracker, and Group Leaderboard" width="22%" />
   &nbsp;&nbsp;
-  <img src="docs/screenshots/leaderboard.png" alt="Dynamic Goal Pacing & Leaderboard" width="22%" onerror="this.src='https://placehold.co/390x844/120809/F5EBE6?text=Pacing+Leaderboard';" />
+  <img src="docs/screenshots/training-log.PNG" alt="Historical Training Log and Backfill Ledger" width="22%" />
   &nbsp;&nbsp;
-  <img src="docs/screenshots/pause-mode.png" alt="Vacation & Injury Freeze Mode" width="22%" onerror="this.src='https://placehold.co/390x844/120809/F5EBE6?text=Freeze+Mode';" />
+  <img src="docs/screenshots/pause-mode.PNG" alt="Vacation & Injury Freeze Mode" width="22%" />
   &nbsp;&nbsp;
-  <img src="docs/screenshots/friction-passage.png" alt="Shakespeare Typing Friction" width="22%" onerror="this.src='https://placehold.co/390x844/120809/F5EBE6?text=Friction+Passage';" />
+  <img src="docs/screenshots/friction-passage.PNG" alt="Shakespeare Typing Friction" width="22%" />
 </p>
 
 <p align="center">
-  <em>Screenshots: (1) One-tap logging & 7-day dot tracker &bull; (2) Group leaderboard with dynamic pace tracking &bull; (3) Vacation/Injury pause accountability toggle &bull; (4) Behavioral friction typing passage.</em>
+  <em>Screenshots: (1) Today view with 7-day dot tracker and group leaderboard &bull; (2) Historical training log and backfill ledger &bull; (3) Vacation/Injury pause accountability toggle &bull; (4) Behavioral friction typing passage.</em>
 </p>
 
 ---
 
-## 🎯 Portfolio Highlights: Data, Design & Engineering
+## Portfolio Focus: Data, Design & Engineering
 
-### 1. 📊 Data Science & Mathematical Modeling
+### 1. Data Science & Mathematical Modeling
 
 * **Dynamic Goal Feasibility & Pacing Engine:**
   Unlike static goal trackers that divide by 52 weeks, the app calculates an adaptive real-time required pace based on actual days remaining in the year:
@@ -38,7 +38,7 @@ Built for a small group of athletes to track daily workouts, normalize fair acco
 * **Vacation & Injury Normalization (Freeze Mode):**
   A common failure mode in fitness trackers is streak punishment during illness or travel. The app implements mathematical normalization:
   $$D_{\text{effective}} = 365 - D_{\text{paused}}$$
-  $$W_{\text{goal, adjusted}} = \operatorname{round}\left(D_{\text{effective}} \times \frac{\text{Goal \%}}{100}\right)$$
+  $$W_{\text{goal, adjusted}} = \mathrm{round}\left(D_{\text{effective}} \times \frac{\text{Goal \%}}{100}\right)$$
   Cumulative paused intervals subtract from elapsed calendar time, ensuring athletes are neither penalized nor rewarded for recovery periods.
 
 * **Deterministic Calendar Arithmetic & Zero Time-Zone Drift:**
@@ -49,7 +49,7 @@ Built for a small group of athletes to track daily workouts, normalize fair acco
 
 ---
 
-### 2. 🎨 Product Design & Behavioral UX
+### 2. Product Design & Behavioral UX
 
 * **Bespoke Visual Identity ("Gothic Modernism"):**
   Rejects generic corporate SaaS templates in favor of a dark gothic aesthetic inspired by medieval manuscripts and minimalist typography:
@@ -69,7 +69,7 @@ Built for a small group of athletes to track daily workouts, normalize fair acco
 
 ---
 
-### 3. 🛠️ Full-Stack Architecture & Engineering
+### 3. Full-Stack Architecture & Engineering
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -111,13 +111,13 @@ Built for a small group of athletes to track daily workouts, normalize fair acco
 
 ---
 
-## 📐 Mathematical Formulation Reference
+## Mathematical Formulation Reference
 
 | Metric | Formula | Description |
 | :--- | :--- | :--- |
 | **Logged Day Percentage** | $P = \frac{W_{\text{logged}}}{D_{\text{logged}}} \times 100$ | Percentage of logged days where a workout was completed. |
 | **Days Needed (Days Goal)** | $W_{\text{needed}} = \max(0, G_{\text{days}} - W_{\text{completed}})$ | Workouts required to hit an absolute day target. |
-| **Days Needed (Percent Goal)** | $W_{\text{needed}} = \max\left(0, \operatorname{round}\left(D_{\text{eff}} \times \frac{G_{\text{percent}}}{100}\right) - W_{\text{completed}}\right)$ | Workouts required to hit a percentage target over the effective year. |
+| **Days Needed (Percent Goal)** | $W_{\text{needed}} = \max\left(0, \mathrm{round}\left(D_{\text{eff}} \times \frac{G_{\text{percent}}}{100}\right) - W_{\text{completed}}\right)$ | Workouts required to hit a percentage target over the effective year. |
 | **Effective Days** | $D_{\text{eff}} = D_{\text{year}} - D_{\text{paused}}$ | Total calendar days in year adjusted for cumulative pause periods. |
 | **Active Days Elapsed** | $D_{\text{active}} = D_{\text{year, elapsed}} - D_{\text{paused, elapsed}}$ | Calendar days elapsed excluding paused/freeze days. |
 | **Required Weekly Pace** | $P_{\text{req}} = \left(\frac{W_{\text{needed}}}{\max(1, D_{\text{eff}} - D_{\text{active}})}\right) \times 7$ | Real-time weekly workouts needed to hit goal by year-end. |
@@ -125,7 +125,7 @@ Built for a small group of athletes to track daily workouts, normalize fair acco
 
 ---
 
-## 💻 Tech Stack Summary
+## Tech Stack Summary
 
 * **Frontend:** React 19, TypeScript (Strict Mode), Vite, Custom CSS Variables & Layouts
 * **Design & Typography:** Google Fonts (`Cinzel`, `Inter`, `Space Mono`), Hand-crafted SVG Icons
@@ -135,7 +135,7 @@ Built for a small group of athletes to track daily workouts, normalize fair acco
 
 ---
 
-## 🚀 Running the Project Locally
+## Running the Project Locally
 
 ### 1. Clone & Install
 ```bash
@@ -174,5 +174,5 @@ npm run build
 
 ---
 
-## 📄 License
+## License
 MIT License &copy; 2026. Built with precision for the crew.
