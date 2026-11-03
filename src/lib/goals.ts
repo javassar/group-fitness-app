@@ -74,6 +74,21 @@ export function describeGoalShort(goal: Goal): string {
   return `${goal.value}%`;
 }
 
+export function computeWeeklyPace(goal: Goal, year: number): number {
+  if (goal.type === 'percent') {
+    return (goal.value * 7) / 100;
+  }
+  return (goal.value / daysInYear(year)) * 7;
+}
+
+export function formatWeeklyPace(goal: Goal, year: number): string {
+  const weekly = computeWeeklyPace(goal, year);
+  const rounded = Math.round(weekly * 10) / 10;
+  const numStr = Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1);
+  const unit = rounded === 1 ? 'day / wk' : 'days / wk';
+  return `~${numStr} ${unit}`;
+}
+
 export function goalStatusText(status: GoalStatus): string {
   if (status.state === 'not_started') {
     return 'Log today to start tracking your goal.';

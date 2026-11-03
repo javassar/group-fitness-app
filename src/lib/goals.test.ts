@@ -4,6 +4,7 @@ import {
   computeGoalStatus,
   describeGoal,
   describeGoalShort,
+  formatWeeklyPace,
   goalStatusText,
   validateGoalInput,
 } from './goals';
@@ -126,6 +127,26 @@ describe('describeGoalShort and goalStatusText', () => {
     expect(goalStatusText({ state: 'behind', daysBehind: 2 })).toBe(
       'Behind pace. 2 more workout days to catch up.'
     );
+  });
+});
+
+describe('formatWeeklyPace', () => {
+  const year = 2027; // 365 days
+
+  it('calculates weekly pace for percentage goals', () => {
+    expect(formatWeeklyPace({ type: 'percent', value: 75 }, year)).toBe('~5.3 days / wk');
+    expect(formatWeeklyPace({ type: 'percent', value: 50 }, year)).toBe('~3.5 days / wk');
+    expect(formatWeeklyPace({ type: 'percent', value: 100 }, year)).toBe('~7 days / wk');
+    expect(formatWeeklyPace({ type: 'percent', value: 14 }, year)).toBe('~1 day / wk');
+  });
+
+  it('calculates weekly pace for days goals', () => {
+    // 200 / 365 * 7 = 3.8356... -> 3.8
+    expect(formatWeeklyPace({ type: 'days', value: 200 }, year)).toBe('~3.8 days / wk');
+    // 52 / 365 * 7 = 0.997... -> 1
+    expect(formatWeeklyPace({ type: 'days', value: 52 }, year)).toBe('~1 day / wk');
+    // 365 / 365 * 7 = 7
+    expect(formatWeeklyPace({ type: 'days', value: 365 }, year)).toBe('~7 days / wk');
   });
 });
 
