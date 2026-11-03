@@ -65,7 +65,22 @@ export class MockDataClient implements DataClient {
 
     for (const member of this.members) {
       if (member.name === 'Jeannie') {
-        // No initial data entered yet for Jeannie
+        // Seed exactly 222 workout days before November 2, 2026
+        const jeannieDays = getDateRangeDescending(yearStart, '2026-11-01').reverse();
+        const restIndices = new Set<number>();
+        for (let k = 0; k < 83; k++) {
+          const idx = Math.min(Math.round((k + 0.5) * (jeannieDays.length / 83)), jeannieDays.length - 1);
+          restIndices.add(idx);
+        }
+        for (let i = 0; i < jeannieDays.length; i++) {
+          const date = jeannieDays[i];
+          const isRest = restIndices.has(i);
+          this.logs.set(`${member.id}:${date}`, {
+            date,
+            status: isRest ? 'no_workout' : 'worked_out',
+            note: null,
+          });
+        }
         continue;
       }
       for (const date of daysToSeed) {

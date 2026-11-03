@@ -262,4 +262,15 @@ describe('MockDataClient goal storage and behavior', () => {
     expect(changes[0].oldGoal).toEqual({ type: 'days', value: 200 });
     expect(changes[0].newGoal).toEqual({ type: 'percent', value: 60 });
   });
+
+  it('initializes Jeannie with 222 workouts in 2026 and no initial goals', async () => {
+    const client = new MockDataClient('test');
+    const stats = await client.getGroupStats(2026);
+    const jeannie = stats.find((s) => s.name === 'Jeannie');
+    expect(jeannie).toBeDefined();
+    expect(jeannie?.workedOutBeforeToday).toBe(222);
+
+    const goals = await client.getGoals(2026);
+    expect(goals.find((g) => g.memberId === 'm-jeannie')).toBeUndefined();
+  });
 });
