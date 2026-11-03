@@ -1,7 +1,7 @@
 import type { Goal, GoalType } from '../data/types';
 import { daysInYear } from './dates';
 
-export const GOALS_START_YEAR = Number(import.meta.env.VITE_GOALS_START_YEAR ?? 2027);
+export const GOALS_START_YEAR = Number(import.meta.env.VITE_GOALS_START_YEAR ?? 2026);
 
 export type GoalStatusState = 'not_started' | 'on_track' | 'behind';
 
