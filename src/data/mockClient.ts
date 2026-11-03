@@ -38,13 +38,14 @@ export class MockDataClient implements DataClient {
     this.passcode = passcode;
     const tz = deviceTimeZone();
 
-    // Five members named as in supabase/seed.sql
+    // Six members named as in supabase/seed.sql
     this.members = [
       { id: 'm-audrey', name: 'Audrey', timeZone: tz },
       { id: 'm-gray', name: 'Gray', timeZone: tz },
       { id: 'm-jack', name: 'Jack', timeZone: tz },
       { id: 'm-jackie', name: 'Jackie', timeZone: tz },
       { id: 'm-jan', name: 'Jan', timeZone: tz },
+      { id: 'm-jeannie', name: 'Jeannie', timeZone: tz },
     ];
 
     this.seedMockData();
@@ -63,6 +64,10 @@ export class MockDataClient implements DataClient {
     const rand = createDeterministicRandom(42);
 
     for (const member of this.members) {
+      if (member.name === 'Jeannie') {
+        // No initial data entered yet for Jeannie
+        continue;
+      }
       for (const date of daysToSeed) {
         const roll = rand();
         if (roll < 0.55) {

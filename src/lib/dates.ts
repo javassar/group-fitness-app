@@ -120,15 +120,15 @@ export function getCurrentWeekDates(dateStr: string): WeekDayInfo[] {
   const currentUtc = Date.UTC(year, month - 1, day);
   const d = new Date(currentUtc);
   const dayOfWeek = d.getUTCDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
-  const daysSinceMonday = (dayOfWeek + 6) % 7;
-  const mondayUtc = currentUtc - daysSinceMonday * 86400000;
+  const daysSinceSunday = dayOfWeek; // Sunday is index 0
+  const sundayUtc = currentUtc - daysSinceSunday * 86400000;
 
-  const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const labels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const week: WeekDayInfo[] = [];
 
   for (let i = 0; i < 7; i++) {
-    const dayUtc = mondayUtc + i * 86400000;
+    const dayUtc = sundayUtc + i * 86400000;
     const dateObj = new Date(dayUtc);
     const y = dateObj.getUTCFullYear();
     const m = String(dateObj.getUTCMonth() + 1).padStart(2, '0');

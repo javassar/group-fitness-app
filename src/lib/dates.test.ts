@@ -57,23 +57,23 @@ describe('dates helper functions', () => {
   });
 
   describe('getCurrentWeekDates', () => {
-    it('returns Monday through Sunday for a Wednesday', () => {
+    it('returns Sunday through Saturday for a Wednesday', () => {
       // 2026-11-04 is a Wednesday
       const week = getCurrentWeekDates('2026-11-04');
       expect(week.length).toBe(7);
-      expect(week[0]).toEqual({ date: '2026-11-02', label: 'M', dayName: 'Monday' });
-      expect(week[1]).toEqual({ date: '2026-11-03', label: 'T', dayName: 'Tuesday' });
-      expect(week[2]).toEqual({ date: '2026-11-04', label: 'W', dayName: 'Wednesday' });
-      expect(week[3]).toEqual({ date: '2026-11-05', label: 'T', dayName: 'Thursday' });
-      expect(week[4]).toEqual({ date: '2026-11-06', label: 'F', dayName: 'Friday' });
-      expect(week[5]).toEqual({ date: '2026-11-07', label: 'S', dayName: 'Saturday' });
-      expect(week[6]).toEqual({ date: '2026-11-08', label: 'S', dayName: 'Sunday' });
+      expect(week[0]).toEqual({ date: '2026-11-01', label: 'S', dayName: 'Sunday' });
+      expect(week[1]).toEqual({ date: '2026-11-02', label: 'M', dayName: 'Monday' });
+      expect(week[2]).toEqual({ date: '2026-11-03', label: 'T', dayName: 'Tuesday' });
+      expect(week[3]).toEqual({ date: '2026-11-04', label: 'W', dayName: 'Wednesday' });
+      expect(week[4]).toEqual({ date: '2026-11-05', label: 'T', dayName: 'Thursday' });
+      expect(week[5]).toEqual({ date: '2026-11-06', label: 'F', dayName: 'Friday' });
+      expect(week[6]).toEqual({ date: '2026-11-07', label: 'S', dayName: 'Saturday' });
     });
 
-    it('returns the same week whether evaluated on Monday or Sunday', () => {
-      const fromMonday = getCurrentWeekDates('2026-11-02');
-      const fromSunday = getCurrentWeekDates('2026-11-08');
-      expect(fromMonday).toEqual(fromSunday);
+    it('returns the same week whether evaluated on Sunday or Saturday', () => {
+      const fromSunday = getCurrentWeekDates('2026-11-01');
+      const fromSaturday = getCurrentWeekDates('2026-11-07');
+      expect(fromSunday).toEqual(fromSaturday);
     });
   });
 });
