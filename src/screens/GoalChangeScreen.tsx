@@ -11,6 +11,7 @@ interface GoalChangeScreenProps {
   onCancel: () => void;
   isSaving: boolean;
   errorMessage?: string | null;
+  skipPassage?: boolean;
 }
 
 export function GoalChangeScreen({
@@ -20,8 +21,9 @@ export function GoalChangeScreen({
   onCancel,
   isSaving,
   errorMessage,
+  skipPassage = false,
 }: GoalChangeScreenProps) {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2>(skipPassage ? 2 : 1);
 
   // Step 1: Typed friction passage state
   const [typed, setTyped] = useState('');
@@ -143,9 +145,13 @@ export function GoalChangeScreen({
           </div>
         ) : (
           <div className="goal-edit-box">
-            <h1 className="screen-title">Set your new goal</h1>
+            <h1 className="screen-title">
+              {skipPassage ? 'Adjust your goal' : 'Set your new goal'}
+            </h1>
             <p className="screen-subtitle">
-              Choose your updated target for {year}.
+              {skipPassage
+                ? `Choose a realistic target for the remainder of ${year}.`
+                : `Choose your updated target for ${year}.`}
             </p>
 
             <form onSubmit={handleSaveClick} className="goal-setup-form">

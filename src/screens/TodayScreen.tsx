@@ -1,10 +1,16 @@
+import { useState } from 'react';
 import type { DayLog, DayStatus, GoalChange, GroupStatsRow, MemberGoal } from '../data/types';
 import { GoalCard } from '../components/GoalCard';
 import { GoalChangesList } from '../components/GoalChangesList';
 import { InstallHint } from '../components/InstallHint';
 import { StatsList } from '../components/StatsList';
 import { TodayCard } from '../components/TodayCard';
-import { computeGoalStatus, GOALS_START_YEAR } from '../lib/goals';
+import { UnfeasibleGoalModal } from '../components/UnfeasibleGoalModal';
+import {
+  computeGoalStatus,
+  computeRequiredWeeklyPace,
+  GOALS_START_YEAR,
+} from '../lib/goals';
 import { computeStats } from '../lib/stats';
 
 interface TodayScreenProps {
@@ -19,6 +25,9 @@ interface TodayScreenProps {
   showInstallHint: boolean;
   memberGoals?: MemberGoal[];
   goalChanges?: GoalChange[];
+  isAlertDismissed?: boolean;
+  onDismissAlert?: () => void;
+  onChangeGoal?: (skipPassage?: boolean) => void;
   onDismissInstallHint: () => void;
   onReviewUnlogged: () => void;
   onSelectMember: (memberId: string) => void;
@@ -38,12 +47,23 @@ export function TodayScreen({
   showInstallHint,
   memberGoals,
   goalChanges,
+  isAlertDismissed,
+  onDismissAlert,
+  onChangeGoal,
   onDismissInstallHint,
   onReviewUnlogged,
   onSelectMember,
   onSaveToday,
   onClearToday,
 }: TodayScreenProps) {
+  const [localDismissed, setLocalDismissed] = useState(false);
+  const alertDismissed = isAlertDismissed ?? localDismissed;
+
+  const handleDismissAlert = () => {
+    setLocalDismissed(true);
+    onDismissAlert?.();
+  };
+
   const signedInGoal = memberGoals?.find((g) => g.memberId === signedInMemberId);
   const signedInRow = statsRows.find((r) => r.memberId === signedInMemberId);
   const signedInStats = signedInRow ? computeStats(currentYear, signedInRow) : null;
@@ -56,6 +76,16 @@ export function TodayScreen({
           signedInStats.daysCounted
         )
       : { state: 'not_started' as const };
+
+  const dynamicPace =
+    signedInGoal && signedInStats
+      ? computeRequiredWeeklyPace(
+          signedInGoal.goal,
+          currentYear,
+          signedInStats.workoutDays,
+          todayDate
+        )
+      : null;
 
   return (
     <div className="screen-content">
@@ -91,8 +121,20 @@ export function TodayScreen({
           goal={signedInGoal.goal}
           year={currentYear}
           status={goalStatus}
+          requiredPace={dynamicPace?.paceRequired}
         />
       )}
+
+      {currentYear >= GOALS_START_YEAR &&
+        dynamicPace?.isUnfeasible &&
+        !alertDismissed && (
+          <UnfeasibleGoalModal
+            onAdjustGoal={() => {
+              onChangeGoal?.(true);
+            }}
+            onDismiss={handleDismissAlert}
+          />
+        )}
 
       <StatsList
         rows={statsRows}

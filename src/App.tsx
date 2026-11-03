@@ -47,6 +47,8 @@ export function App() {
   const [memberGoals, setMemberGoals] = useState<MemberGoal[]>([]);
   const [goalChanges, setGoalChanges] = useState<GoalChange[]>([]);
   const [isChangingGoal, setIsChangingGoal] = useState(false);
+  const [skipFrictionPassage, setSkipFrictionPassage] = useState(false);
+  const [isUnfeasibleAlertDismissed, setIsUnfeasibleAlertDismissed] = useState(false);
 
   const [activeTab, setActiveTab] = useState<TabType>('today');
   const [historyViewingMemberId, setHistoryViewingMemberId] = useState<string | null>(null);
@@ -222,6 +224,8 @@ export function App() {
     setMemberGoals([]);
     setGoalChanges([]);
     setIsChangingGoal(false);
+    setSkipFrictionPassage(false);
+    setIsUnfeasibleAlertDismissed(false);
     setHasLoadedInitial(false);
     setActiveTab('today');
 
@@ -291,6 +295,7 @@ export function App() {
     setGoalErrorMessage(null);
     try {
       await client.setGoal(memberId, currentYear, goal);
+      setIsUnfeasibleAlertDismissed(false);
       await loadData();
     } catch (err) {
       if (!handleAuthError(err)) {
@@ -393,13 +398,16 @@ export function App() {
       <GoalChangeScreen
         currentGoal={signedInGoal.goal}
         year={currentYear}
+        skipPassage={skipFrictionPassage}
         onSaveGoal={async (newGoal) => {
           await handleSaveGoal(newGoal);
           setIsChangingGoal(false);
+          setSkipFrictionPassage(false);
         }}
         onCancel={() => {
           setGoalErrorMessage(null);
           setIsChangingGoal(false);
+          setSkipFrictionPassage(false);
         }}
         isSaving={isSaving}
         errorMessage={goalErrorMessage}
@@ -480,6 +488,12 @@ export function App() {
             onSelectMember={handleSelectMemberFromStats}
             onSaveToday={handleSaveToday}
             onClearToday={handleClearToday}
+            isAlertDismissed={isUnfeasibleAlertDismissed}
+            onDismissAlert={() => setIsUnfeasibleAlertDismissed(true)}
+            onChangeGoal={(skipPassage) => {
+              setSkipFrictionPassage(Boolean(skipPassage));
+              setIsChangingGoal(true);
+            }}
           />
         )}
         {activeTab === 'history' && (
@@ -507,7 +521,10 @@ export function App() {
             todayDate={currentDate}
             currentGoal={signedInGoal?.goal ?? null}
             currentYear={currentYear}
-            onChangeGoal={() => setIsChangingGoal(true)}
+            onChangeGoal={() => {
+              setSkipFrictionPassage(false);
+              setIsChangingGoal(true);
+            }}
           />
         )}
       </main>

@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { MockDataClient } from '../data/mockClient';
 import {
   computeGoalStatus,
+  computeRequiredWeeklyPace,
   describeGoal,
   describeGoalShort,
+  formatRequiredWeeklyPace,
   formatWeeklyPace,
   goalStatusText,
   validateGoalInput,
@@ -120,13 +122,9 @@ describe('describeGoalShort and goalStatusText', () => {
     );
   });
 
-  it('formats goalStatusText for behind with singular (1 day behind) and plural (2 days behind)', () => {
-    expect(goalStatusText({ state: 'behind', daysBehind: 1 })).toBe(
-      'Behind pace. 1 more workout day to catch up.'
-    );
-    expect(goalStatusText({ state: 'behind', daysBehind: 2 })).toBe(
-      'Behind pace. 2 more workout days to catch up.'
-    );
+  it('formats goalStatusText for behind', () => {
+    expect(goalStatusText({ state: 'behind', daysBehind: 1 })).toBe('Behind pace.');
+    expect(goalStatusText({ state: 'behind', daysBehind: 30 })).toBe('Behind pace.');
   });
 });
 
@@ -147,6 +145,53 @@ describe('formatWeeklyPace', () => {
     expect(formatWeeklyPace({ type: 'days', value: 52 }, year)).toBe('~1 day / wk');
     // 365 / 365 * 7 = 7
     expect(formatWeeklyPace({ type: 'days', value: 365 }, year)).toBe('~7 days / wk');
+  });
+});
+
+describe('computeRequiredWeeklyPace and formatRequiredWeeklyPace', () => {
+  const year = 2026; // 365 days
+
+  it('computes dynamic required pace accurately when feasible', () => {
+    // 75% of 365 = round(273.75) = 274
+    // 2026-11-02 is day 306. D_remaining = 365 - 306 = 59
+    // workoutsCompleted = 220 -> W_needed = 274 - 220 = 54
+    // Pace_required = (54 / 59) * 7 = 6.406779...
+    const res = computeRequiredWeeklyPace({ type: 'percent', value: 75 }, year, 220, '2026-11-02');
+    expect(res.workoutsGoal).toBe(274);
+    expect(res.workoutsNeeded).toBe(54);
+    expect(res.daysRemaining).toBe(59);
+    expect(res.isUnfeasible).toBe(false);
+    expect(formatRequiredWeeklyPace(res.paceRequired)).toBe('~6.4 days / wk');
+  });
+
+  it('detects unfeasible goals when required pace exceeds 7 days/wk', () => {
+    // 75% of 365 = 274
+    // On 2026-11-02 (day 306), D_remaining = 59
+    // workoutsCompleted = 100 -> W_needed = 174
+    // Pace_required = (174 / 59) * 7 = 20.64... > 7.0
+    const res = computeRequiredWeeklyPace({ type: 'percent', value: 75 }, year, 100, '2026-11-02');
+    expect(res.isUnfeasible).toBe(true);
+    expect(res.workoutsNeeded).toBe(174);
+    expect(formatRequiredWeeklyPace(res.paceRequired)).toBe('~20.6 days / wk');
+  });
+
+  it('handles days goals and returns 0.0 when goal is already reached', () => {
+    // Goal 200 days. Completed 210.
+    const res = computeRequiredWeeklyPace({ type: 'days', value: 200 }, year, 210, '2026-11-02');
+    expect(res.workoutsNeeded).toBe(0);
+    expect(res.isUnfeasible).toBe(false);
+    expect(res.paceRequired).toBe(0);
+    expect(formatRequiredWeeklyPace(res.paceRequired)).toBe('~0.0 days / wk');
+  });
+
+  it('handles the last day of the year without division by zero', () => {
+    // 2026-12-31 is day 365. D_remaining = max(1, 365 - 365) = 1
+    const res = computeRequiredWeeklyPace({ type: 'days', value: 200 }, year, 199, '2026-12-31');
+    expect(res.daysRemaining).toBe(1);
+    expect(res.workoutsNeeded).toBe(1);
+    expect(res.paceRequired).toBe(7);
+    expect(res.isUnfeasible).toBe(false);
+    expect(formatRequiredWeeklyPace(res.paceRequired)).toBe('~7.0 days / wk');
   });
 });
 

@@ -1,5 +1,5 @@
 import type { Goal, GoalType } from '../data/types';
-import { daysInYear } from './dates';
+import { dayOfYear, daysInYear } from './dates';
 
 export const GOALS_START_YEAR = Number(import.meta.env.VITE_GOALS_START_YEAR ?? 2026);
 
@@ -89,6 +89,44 @@ export function formatWeeklyPace(goal: Goal, year: number): string {
   return `~${numStr} ${unit}`;
 }
 
+export interface DynamicPaceResult {
+  workoutsGoal: number;
+  workoutsNeeded: number;
+  daysRemaining: number;
+  paceRequired: number;
+  isUnfeasible: boolean;
+}
+
+export function computeRequiredWeeklyPace(
+  goal: Goal,
+  year: number,
+  workoutsCompleted: number,
+  todayDateStr: string
+): DynamicPaceResult {
+  const totalDaysInYear = daysInYear(year);
+  const workoutsGoal =
+    goal.type === 'days'
+      ? goal.value
+      : Math.round(totalDaysInYear * (goal.value / 100));
+  const workoutsNeeded = Math.max(0, workoutsGoal - workoutsCompleted);
+  const currentDayOfYear = dayOfYear(todayDateStr);
+  const daysRemaining = Math.max(1, totalDaysInYear - currentDayOfYear);
+  const paceRequired = (workoutsNeeded / daysRemaining) * 7;
+  const isUnfeasible = paceRequired > 7.0 || workoutsNeeded > daysRemaining;
+
+  return {
+    workoutsGoal,
+    workoutsNeeded,
+    daysRemaining,
+    paceRequired,
+    isUnfeasible,
+  };
+}
+
+export function formatRequiredWeeklyPace(paceRequired: number): string {
+  return `~${paceRequired.toFixed(1)} days / wk`;
+}
+
 export function goalStatusText(status: GoalStatus): string {
   if (status.state === 'not_started') {
     return 'Log today to start tracking your goal.';
@@ -101,8 +139,7 @@ export function goalStatusText(status: GoalStatus): string {
     return 'On track.';
   }
   if (status.state === 'behind') {
-    const behind = status.daysBehind ?? 0;
-    return `Behind pace. ${behind} more workout ${behind === 1 ? 'day' : 'days'} to catch up.`;
+    return 'Behind pace.';
   }
   return '';
 }
