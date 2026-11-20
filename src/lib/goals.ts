@@ -30,6 +30,28 @@ export function validateGoalInput(type: GoalType, value: number, year: number): 
   return null;
 }
 
+export function validateGoalAttainability(
+  goal: Goal,
+  year: number,
+  workoutsCompleted: number,
+  todayDateStr: string,
+  pausedDaysCount = 0,
+  pausedDaysElapsed = 0
+): string | null {
+  const pace = computeRequiredWeeklyPace(
+    goal,
+    year,
+    workoutsCompleted,
+    todayDateStr,
+    pausedDaysCount,
+    pausedDaysElapsed
+  );
+  if (pace.isUnfeasible) {
+    return `This goal is no longer attainable this year (requires ~${pace.paceRequired.toFixed(1)} days/week).`;
+  }
+  return null;
+}
+
 export function computeGoalStatus(
   goal: Goal,
   year: number,

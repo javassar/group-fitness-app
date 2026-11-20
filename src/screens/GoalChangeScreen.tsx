@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import type { Goal, GoalType } from '../data/types';
 import { daysInYear } from '../lib/dates';
-import { formatWeeklyDays, validateGoalInput } from '../lib/goals';
+import { formatWeeklyDays, validateGoalAttainability, validateGoalInput } from '../lib/goals';
 import { checkTyped, PASSAGE } from '../lib/passage';
 
 interface GoalChangeScreenProps {
   currentGoal: Goal;
   year: number;
+  todayDate: string;
+  workoutsCompleted: number;
+  pausedDaysCount?: number;
+  pausedDaysElapsed?: number;
   onSaveGoal: (goal: Goal) => Promise<void>;
   onCancel: () => void;
   isSaving: boolean;
@@ -17,6 +21,10 @@ interface GoalChangeScreenProps {
 export function GoalChangeScreen({
   currentGoal,
   year,
+  todayDate,
+  workoutsCompleted,
+  pausedDaysCount = 0,
+  pausedDaysElapsed = 0,
   onSaveGoal,
   onCancel,
   isSaving,
@@ -60,13 +68,26 @@ export function GoalChangeScreen({
   const trimmed = valueStr.trim();
   const numValue = trimmed === '' ? NaN : Number(trimmed);
   const validationError = hasTypedStep2 ? validateGoalInput(goalType, numValue, year) : null;
-  const isValid = trimmed !== '' && validateGoalInput(goalType, numValue, year) === null;
+  const isBasicValid = trimmed !== '' && validateGoalInput(goalType, numValue, year) === null;
+  const attainabilityError =
+    isBasicValid && hasTypedStep2
+      ? validateGoalAttainability(
+          { type: goalType, value: numValue },
+          year,
+          workoutsCompleted,
+          todayDate,
+          pausedDaysCount,
+          pausedDaysElapsed
+        )
+      : null;
+  const displayError = validationError ?? attainabilityError;
+  const isValid = isBasicValid && attainabilityError === null;
   const isUnchanged = goalType === currentGoal.type && numValue === currentGoal.value;
   const canSave = isValid && !isUnchanged && !isSaving;
 
   // Live helper line for step 2
   let liveHelper = '';
-  if (isValid) {
+  if (isBasicValid) {
     const weeklyText = formatWeeklyDays({ type: goalType, value: numValue }, year);
     if (goalType === 'days') {
       const pct = Math.round((numValue / D) * 100);
@@ -198,8 +219,8 @@ export function GoalChangeScreen({
                 />
 
                 {liveHelper && <p className="goal-helper-text">{liveHelper}</p>}
-                {validationError && (
-                  <p className="form-error goal-validation-error">{validationError}</p>
+                {displayError && (
+                  <p className="form-error goal-validation-error">{displayError}</p>
                 )}
                 {isUnchanged && !validationError && (
                   <p className="goal-helper-text muted-note">

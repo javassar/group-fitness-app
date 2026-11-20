@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import type { Goal, GoalType } from '../data/types';
 import { daysInYear } from '../lib/dates';
-import { describeGoal, formatWeeklyDays, validateGoalInput } from '../lib/goals';
+import { describeGoal, formatWeeklyDays, validateGoalAttainability, validateGoalInput } from '../lib/goals';
 
 interface GoalSetupScreenProps {
   year: number;
   memberName?: string;
+  todayDate?: string;
+  workoutsCompleted?: number;
+  pausedDaysCount?: number;
+  pausedDaysElapsed?: number;
   onSaveGoal: (goal: Goal) => Promise<void>;
   onNotYou: () => void;
   isSaving: boolean;
@@ -15,6 +19,10 @@ interface GoalSetupScreenProps {
 export function GoalSetupScreen({
   year,
   memberName,
+  todayDate,
+  workoutsCompleted = 0,
+  pausedDaysCount = 0,
+  pausedDaysElapsed = 0,
   onSaveGoal,
   onNotYou,
   isSaving,
@@ -29,11 +37,24 @@ export function GoalSetupScreen({
   const trimmed = valueStr.trim();
   const numValue = trimmed === '' ? NaN : Number(trimmed);
   const validationError = hasTyped ? validateGoalInput(goalType, numValue, year) : null;
-  const isValid = trimmed !== '' && validateGoalInput(goalType, numValue, year) === null;
+  const isBasicValid = trimmed !== '' && validateGoalInput(goalType, numValue, year) === null;
+  const attainabilityError =
+    isBasicValid && hasTyped && todayDate
+      ? validateGoalAttainability(
+          { type: goalType, value: numValue },
+          year,
+          workoutsCompleted,
+          todayDate,
+          pausedDaysCount,
+          pausedDaysElapsed
+        )
+      : null;
+  const displayError = validationError ?? attainabilityError;
+  const isValid = isBasicValid && attainabilityError === null;
 
   // Live helper line when input is valid
   let liveHelper = '';
-  if (isValid) {
+  if (isBasicValid) {
     const weeklyText = formatWeeklyDays({ type: goalType, value: numValue }, year);
     if (goalType === 'days') {
       const pct = Math.round((numValue / D) * 100);
@@ -132,8 +153,8 @@ export function GoalSetupScreen({
                 />
 
                 {liveHelper && <p className="goal-helper-text">{liveHelper}</p>}
-                {validationError && (
-                  <p className="form-error goal-validation-error">{validationError}</p>
+                {displayError && (
+                  <p className="form-error goal-validation-error">{displayError}</p>
                 )}
               </div>
 

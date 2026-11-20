@@ -16,6 +16,7 @@ import { GOALS_START_YEAR } from './lib/goals';
 import { computeMemberPauseSummary } from './lib/pauses';
 import { isIOS, isStandalone } from './lib/platform';
 import { unsubscribeFromPush } from './lib/push';
+import { computeStats } from './lib/stats';
 import {
   clearAllAuth,
   clearStoredMemberId,
@@ -410,11 +411,26 @@ export function App() {
   const signedInGoal = memberGoals.find((g) => g.memberId === memberId);
   const isGoalRequired = currentYear >= GOALS_START_YEAR && !signedInGoal;
 
+  const signedInRow = statsRows.find((r) => r.memberId === memberId);
+  const pauseSummary = computeMemberPauseSummary(
+    memberId ?? '',
+    memberPauses,
+    currentYear,
+    currentDate
+  );
+  const signedInStats = signedInRow
+    ? computeStats(currentYear, signedInRow, pauseSummary.pausedDaysElapsed)
+    : null;
+
   if (isGoalRequired) {
     return (
       <GoalSetupScreen
         year={currentYear}
         memberName={signedInMember.name}
+        todayDate={currentDate}
+        workoutsCompleted={signedInStats?.workoutDays ?? 0}
+        pausedDaysCount={pauseSummary.pausedDaysCount}
+        pausedDaysElapsed={pauseSummary.pausedDaysElapsed}
         onSaveGoal={handleSaveGoal}
         onNotYou={handleNotYou}
         isSaving={isSaving}
@@ -429,6 +445,10 @@ export function App() {
       <GoalChangeScreen
         currentGoal={signedInGoal.goal}
         year={currentYear}
+        todayDate={currentDate}
+        workoutsCompleted={signedInStats?.workoutDays ?? 0}
+        pausedDaysCount={pauseSummary.pausedDaysCount}
+        pausedDaysElapsed={pauseSummary.pausedDaysElapsed}
         skipPassage={skipFrictionPassage}
         onSaveGoal={async (newGoal) => {
           await handleSaveGoal(newGoal);

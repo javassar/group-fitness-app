@@ -9,6 +9,7 @@ import {
   formatWeeklyDays,
   formatWeeklyPace,
   goalStatusText,
+  validateGoalAttainability,
   validateGoalInput,
 } from './goals';
 
@@ -33,6 +34,70 @@ describe('validateGoalInput', () => {
 
   it('allows days 366 for leap year 2028', () => {
     expect(validateGoalInput('days', 366, 2028)).toBeNull();
+  });
+});
+
+describe('validateGoalAttainability', () => {
+  const year = 2026;
+
+  it('passes when goal is attainable', () => {
+    // 75% on 2026-11-02 (day 306) with 220 completed workouts: requires ~6.4 days/wk
+    const res = validateGoalAttainability(
+      { type: 'percent', value: 75 },
+      year,
+      220,
+      '2026-11-02'
+    );
+    expect(res).toBeNull();
+  });
+
+  it('rejects unattainable percent goal (exceeds 7 days/wk)', () => {
+    // 90% in mid-June (day 166) with only 10 workouts: requires ~11.2 days/wk
+    const res = validateGoalAttainability(
+      { type: 'percent', value: 90 },
+      year,
+      10,
+      '2026-06-15'
+    );
+    expect(res).toBe('This goal is no longer attainable this year (requires ~11.2 days/week).');
+  });
+
+  it('rejects unattainable days goal (workouts needed > days remaining)', () => {
+    // 300 days goal on day 200 with 10 completed: requires 290 more with only 165 days left
+    const res = validateGoalAttainability(
+      { type: 'days', value: 300 },
+      year,
+      10,
+      '2026-07-19'
+    );
+    expect(res).toBe('This goal is no longer attainable this year (requires ~12.3 days/week).');
+  });
+
+  it('passes when goal has already been achieved', () => {
+    const res = validateGoalAttainability(
+      { type: 'days', value: 100 },
+      year,
+      105,
+      '2026-07-19'
+    );
+    expect(res).toBeNull();
+  });
+
+  it('takes paused days into account', () => {
+    // 60% goal with 30 paused days
+    // Effective total days = 335 -> W_goal = round(335 * 0.6) = 201
+    // Day 250 with 30 paused days elapsed -> active elapsed = 220 -> remaining = 335 - 220 = 115
+    // Completed 50 workouts -> needed = 151
+    // 151 > 115 -> pace = (151 / 115) * 7 = 9.19...
+    const res = validateGoalAttainability(
+      { type: 'percent', value: 60 },
+      year,
+      50,
+      '2026-09-07',
+      30,
+      30
+    );
+    expect(res).toBe('This goal is no longer attainable this year (requires ~9.2 days/week).');
   });
 });
 
