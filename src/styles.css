@@ -78,9 +78,11 @@ button {
   touch-action: manipulation;
 }
 
-input {
+input,
+textarea,
+select {
   font-family: inherit;
-  font-size: inherit;
+  font-size: 16px;
   color: inherit;
 }
 
@@ -751,7 +753,7 @@ input {
   border: 1px solid rgba(100, 13, 20, 0.4);
   border-radius: 8px;
   font-family: var(--font-sans);
-  font-size: 0.875rem;
+  font-size: 16px;
   color: #F5EBE6;
   outline: none;
   transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
@@ -759,7 +761,7 @@ input {
 
 .note-input::placeholder {
   color: #6D5A5B;
-  font-size: 0.875rem;
+  font-size: 16px;
 }
 
 .note-input:focus {
@@ -1076,7 +1078,7 @@ input {
 
 .inline-note-input {
   min-height: 40px;
-  font-size: 0.875rem;
+  font-size: 16px;
   border-radius: 6px;
   background-color: #120809;
   border: 1px solid rgba(100, 13, 20, 0.4);
@@ -1328,7 +1330,7 @@ input {
   background-color: #120809;
   border: 1px solid rgba(100, 13, 20, 0.5);
   border-radius: 8px;
-  font-size: 0.9375rem;
+  font-size: 16px;
   color: #F5EBE6;
   outline: none;
 }
@@ -1726,7 +1728,7 @@ input {
   width: 100%;
   min-height: 110px;
   font-family: var(--font-sans);
-  font-size: 0.9375rem;
+  font-size: 16px;
   line-height: 1.5;
   resize: vertical;
   padding: 12px;
