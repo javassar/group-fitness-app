@@ -32,33 +32,74 @@ export function TodayCard({
     setNote(savedNote ?? '');
   }
 
+  const triggerCelebration = () => {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(20);
+      } catch {
+        // Ignore if vibration is blocked or unsupported on the device
+      }
+    }
+    try {
+      confetti({
+        particleCount: 50,
+        spread: 70,
+        origin: { y: 0.65 },
+        colors: ['#AD2831', '#800E13', '#F5EBE6', '#D97706'],
+        scalar: 0.9,
+        ticks: 200,
+        disableForReducedMotion: true,
+      });
+    } catch {
+      // Ignore if confetti fails
+    }
+  };
+
   const handleStatusClick = async (status: DayStatus) => {
     if (isSaving) return;
     if (status === 'worked_out') {
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        try {
-          navigator.vibrate(20);
-        } catch {
-          // Ignore if vibration is blocked or unsupported on the device
-        }
-      }
-      try {
-        confetti({
-          particleCount: 50,
-          spread: 70,
-          origin: { y: 0.65 },
-          colors: ['#AD2831', '#800E13', '#F5EBE6', '#D97706'],
-          scalar: 0.9,
-          ticks: 200,
-          disableForReducedMotion: true,
-        });
-      } catch {
-        // Ignore if confetti fails
-      }
+      triggerCelebration();
     }
     const sanitizedNote = note.trim().slice(0, 200);
     await onSave(status, sanitizedNote.length > 0 ? sanitizedNote : null);
   };
+
+  const trimmedNote = note.trim().slice(0, 200);
+  const currentSaved = (savedNote ?? '').trim();
+  const isDirty = trimmedNote !== currentSaved;
+
+  // Can save note if:
+  // 1. Status is already set and note has changed from what was saved (including clearing), OR
+  // 2. Status is not set yet, but user has typed a note (will save as 'worked_out')
+  const canSaveNote =
+    !isSaving &&
+    ((currentStatus !== null && isDirty) ||
+      (currentStatus === null && trimmedNote.length > 0));
+
+  const handleSaveNote = async () => {
+    if (!canSaveNote) return;
+    const targetStatus: DayStatus = currentStatus ?? 'worked_out';
+    if (currentStatus === null) {
+      triggerCelebration();
+    }
+    await onSave(targetStatus, trimmedNote.length > 0 ? trimmedNote : null);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveNote();
+    }
+  };
+
+  let saveButtonLabel = 'Save';
+  let isSavedState = false;
+  if (isSaving) {
+    saveButtonLabel = 'Saving';
+  } else if (currentStatus !== null && !isDirty && savedNote !== null) {
+    saveButtonLabel = 'Saved';
+    isSavedState = true;
+  }
 
   const handleClear = async () => {
     if (isSaving) return;
@@ -157,8 +198,18 @@ export function TodayCard({
           maxLength={200}
           value={note}
           onChange={(e) => setNote(e.target.value)}
+          onKeyDown={handleKeyDown}
           disabled={isSaving}
         />
+        <button
+          type="button"
+          className={`btn-note-save ${isSavedState ? 'is-saved' : ''}`}
+          onClick={handleSaveNote}
+          disabled={!canSaveNote}
+          aria-label={saveButtonLabel}
+        >
+          {saveButtonLabel}
+        </button>
       </div>
 
       {currentStatus !== null && (

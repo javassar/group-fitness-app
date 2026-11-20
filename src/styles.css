@@ -736,11 +736,15 @@ input {
 }
 
 .note-input-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100%;
 }
 
 .note-input {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   min-height: 44px;
   padding: 11px 14px;
   background-color: #120809;
@@ -762,6 +766,39 @@ input {
   background-color: #120809;
   border-color: #AD2831;
   box-shadow: 0 0 0 1px #AD2831, 0 0 12px rgba(173, 40, 49, 0.25);
+}
+
+.btn-note-save {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  background-color: #AD2831;
+  color: #F5EBE6;
+  transition: background-color 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-note-save:hover:not(:disabled) {
+  background-color: #C1343E;
+}
+
+.btn-note-save:disabled {
+  background-color: rgba(100, 13, 20, 0.2);
+  border-color: rgba(100, 13, 20, 0.35);
+  color: #6D5A5B;
+  cursor: not-allowed;
+}
+
+.btn-note-save.is-saved {
+  background-color: transparent;
+  border-color: rgba(100, 13, 20, 0.3);
+  color: #8E7B7D;
 }
 
 .today-clear-container {
