@@ -400,6 +400,12 @@ export function App() {
     );
   }
 
+  const signedInMember = members.find((m) => m.id === memberId) ?? {
+    id: memberId,
+    name: 'You',
+    timeZone: deviceTimeZone(),
+  };
+
   // Goal requirement gate (SPEC-3.md section 5.4)
   const signedInGoal = memberGoals.find((g) => g.memberId === memberId);
   const isGoalRequired = currentYear >= GOALS_START_YEAR && !signedInGoal;
@@ -408,7 +414,9 @@ export function App() {
     return (
       <GoalSetupScreen
         year={currentYear}
+        memberName={signedInMember.name}
         onSaveGoal={handleSaveGoal}
+        onNotYou={handleNotYou}
         isSaving={isSaving}
         errorMessage={goalErrorMessage}
       />
@@ -437,12 +445,6 @@ export function App() {
       />
     );
   }
-
-  const signedInMember = members.find((m) => m.id === memberId) ?? {
-    id: memberId,
-    name: 'You',
-    timeZone: deviceTimeZone(),
-  };
 
   const viewingId = historyViewingMemberId ?? memberId;
   const viewingMember = members.find((m) => m.id === viewingId) ?? signedInMember;

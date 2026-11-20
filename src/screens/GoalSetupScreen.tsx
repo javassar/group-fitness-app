@@ -5,14 +5,18 @@ import { describeGoal, formatWeeklyDays, validateGoalInput } from '../lib/goals'
 
 interface GoalSetupScreenProps {
   year: number;
+  memberName?: string;
   onSaveGoal: (goal: Goal) => Promise<void>;
+  onNotYou: () => void;
   isSaving: boolean;
   errorMessage?: string | null;
 }
 
 export function GoalSetupScreen({
   year,
+  memberName,
   onSaveGoal,
+  onNotYou,
   isSaving,
   errorMessage,
 }: GoalSetupScreenProps) {
@@ -63,6 +67,20 @@ export function GoalSetupScreen({
   return (
     <div className="screen-center">
       <div className="screen-card goal-setup-card">
+        <header className="goal-setup-top-bar">
+          <span className="goal-setup-user">
+            {memberName ? `Signed in as ${memberName}` : ''}
+          </span>
+          <button
+            type="button"
+            className="btn-text-link goal-setup-not-you-btn"
+            onClick={onNotYou}
+            disabled={isSaving}
+          >
+            Not you?
+          </button>
+        </header>
+
         {!isConfirming ? (
           <>
             <h1 className="screen-title">Set your {year} goal</h1>

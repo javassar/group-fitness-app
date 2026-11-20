@@ -1456,6 +1456,32 @@ input {
   max-width: var(--max-content-width);
 }
 
+.goal-setup-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  min-height: 32px;
+}
+
+.goal-setup-user {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.goal-setup-not-you-btn {
+  font-size: 0.875rem;
+  color: #A38F90;
+  padding: 4px 0;
+  margin-left: auto;
+}
+
+.goal-setup-not-you-btn:hover {
+  color: #F5EBE6;
+}
+
 .goal-setup-form {
   display: flex;
   flex-direction: column;
