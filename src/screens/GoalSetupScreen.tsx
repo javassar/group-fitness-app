@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Goal, GoalType } from '../data/types';
 import { daysInYear } from '../lib/dates';
-import { describeGoal, validateGoalInput } from '../lib/goals';
+import { describeGoal, formatWeeklyDays, validateGoalInput } from '../lib/goals';
 
 interface GoalSetupScreenProps {
   year: number;
@@ -30,12 +30,13 @@ export function GoalSetupScreen({
   // Live helper line when input is valid
   let liveHelper = '';
   if (isValid) {
+    const weeklyText = formatWeeklyDays({ type: goalType, value: numValue }, year);
     if (goalType === 'days') {
       const pct = Math.round((numValue / D) * 100);
-      liveHelper = `That is about ${pct}% of the year.`;
+      liveHelper = `That is about ${pct}% of the year (${weeklyText}).`;
     } else {
       const days = Math.ceil((numValue * D) / 100);
-      liveHelper = `That is about ${days} days.`;
+      liveHelper = `That is about ${days} days (${weeklyText}).`;
     }
   }
 
@@ -134,7 +135,7 @@ export function GoalSetupScreen({
             <h1 className="screen-title">Confirm your goal</h1>
             <p className="screen-subtitle">
               Your {year} goal will be{' '}
-              <strong>{describeGoal(pendingGoal, year)}</strong>. Changing it later
+              <strong>{describeGoal(pendingGoal, year)}</strong> ({formatWeeklyDays(pendingGoal, year)}). Changing it later
               means typing a passage with no mistakes.
             </p>
 

@@ -6,6 +6,7 @@ import {
   describeGoal,
   describeGoalShort,
   formatRequiredWeeklyPace,
+  formatWeeklyDays,
   formatWeeklyPace,
   goalStatusText,
   validateGoalInput,
@@ -148,6 +149,23 @@ describe('formatWeeklyPace', () => {
   });
 });
 
+describe('formatWeeklyDays', () => {
+  const year = 2027; // 365 days
+
+  it('formats weekly days for percentage goals', () => {
+    expect(formatWeeklyDays({ type: 'percent', value: 75 }, year)).toBe('~5.3 days/week');
+    expect(formatWeeklyDays({ type: 'percent', value: 50 }, year)).toBe('~3.5 days/week');
+    expect(formatWeeklyDays({ type: 'percent', value: 100 }, year)).toBe('~7 days/week');
+    expect(formatWeeklyDays({ type: 'percent', value: 14 }, year)).toBe('~1 day/week');
+  });
+
+  it('formats weekly days for days goals', () => {
+    expect(formatWeeklyDays({ type: 'days', value: 200 }, year)).toBe('~3.8 days/week');
+    expect(formatWeeklyDays({ type: 'days', value: 52 }, year)).toBe('~1 day/week');
+    expect(formatWeeklyDays({ type: 'days', value: 365 }, year)).toBe('~7 days/week');
+  });
+});
+
 describe('computeRequiredWeeklyPace and formatRequiredWeeklyPace', () => {
   const year = 2026; // 365 days
 
@@ -272,5 +290,21 @@ describe('MockDataClient goal storage and behavior', () => {
 
     const goals = await client.getGoals(2026);
     expect(goals.find((g) => g.memberId === 'm-jeannie')).toBeUndefined();
+  });
+
+  it('initializes Joie as a new member with 0 workouts and no initial goals', async () => {
+    const client = new MockDataClient('test');
+    const members = await client.listMembers();
+    const joieMember = members.find((m) => m.name === 'Joie');
+    expect(joieMember).toBeDefined();
+    expect(joieMember?.id).toBe('m-joie');
+
+    const stats = await client.getGroupStats(2026);
+    const joie = stats.find((s) => s.name === 'Joie');
+    expect(joie).toBeDefined();
+    expect(joie?.workedOutBeforeToday).toBe(0);
+
+    const goals = await client.getGoals(2026);
+    expect(goals.find((g) => g.memberId === 'm-joie')).toBeUndefined();
   });
 });

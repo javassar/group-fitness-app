@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Goal, GoalType } from '../data/types';
 import { daysInYear } from '../lib/dates';
-import { validateGoalInput } from '../lib/goals';
+import { formatWeeklyDays, validateGoalInput } from '../lib/goals';
 import { checkTyped, PASSAGE } from '../lib/passage';
 
 interface GoalChangeScreenProps {
@@ -67,12 +67,13 @@ export function GoalChangeScreen({
   // Live helper line for step 2
   let liveHelper = '';
   if (isValid) {
+    const weeklyText = formatWeeklyDays({ type: goalType, value: numValue }, year);
     if (goalType === 'days') {
       const pct = Math.round((numValue / D) * 100);
-      liveHelper = `That is about ${pct}% of the year.`;
+      liveHelper = `That is about ${pct}% of the year (${weeklyText}).`;
     } else {
       const days = Math.ceil((numValue * D) / 100);
-      liveHelper = `That is about ${days} days.`;
+      liveHelper = `That is about ${days} days (${weeklyText}).`;
     }
   }
 

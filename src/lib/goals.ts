@@ -89,6 +89,14 @@ export function formatWeeklyPace(goal: Goal, year: number): string {
   return `~${numStr} ${unit}`;
 }
 
+export function formatWeeklyDays(goal: Goal, year: number): string {
+  const weekly = computeWeeklyPace(goal, year);
+  const rounded = Math.round(weekly * 10) / 10;
+  const numStr = Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1);
+  const unit = rounded === 1 ? 'day/week' : 'days/week';
+  return `~${numStr} ${unit}`;
+}
+
 export interface DynamicPaceResult {
   workoutsGoal: number;
   workoutsNeeded: number;
