@@ -1090,6 +1090,11 @@ select {
   border-color: #AD2831;
 }
 
+.day-editor .btn-note-save {
+  min-height: 40px;
+  border-radius: 6px;
+}
+
 .day-editor-actions {
   display: flex;
   gap: 8px;

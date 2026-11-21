@@ -19,12 +19,53 @@ export function DayEditor({
   onClear,
 }: DayEditorProps) {
   const [note, setNote] = useState(initialNote ?? '');
+  const [prevInitialNote, setPrevInitialNote] = useState(initialNote);
+
+  // Sync state during render when initialNote prop changes from an external reload
+  if (initialNote !== prevInitialNote) {
+    setPrevInitialNote(initialNote);
+    setNote(initialNote ?? '');
+  }
 
   const handleSave = async (status: DayStatus) => {
     if (isSaving) return;
     const sanitizedNote = note.trim().slice(0, 200);
     await onSave(status, sanitizedNote.length > 0 ? sanitizedNote : null);
   };
+
+  const trimmedNote = note.trim().slice(0, 200);
+  const currentSaved = (initialNote ?? '').trim();
+  const isDirty = trimmedNote !== currentSaved;
+
+  // Can save note if:
+  // 1. Status is already set and note has changed from what was saved (including clearing), OR
+  // 2. Status is not set yet, but user has typed a note (will save as 'worked_out')
+  const canSaveNote =
+    !isSaving &&
+    ((currentStatus !== null && isDirty) ||
+      (currentStatus === null && trimmedNote.length > 0));
+
+  const handleSaveNote = async () => {
+    if (!canSaveNote) return;
+    const targetStatus: DayStatus = currentStatus ?? 'worked_out';
+    await onSave(targetStatus, trimmedNote.length > 0 ? trimmedNote : null);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveNote();
+    }
+  };
+
+  let saveButtonLabel = 'Save';
+  let isSavedState = false;
+  if (isSaving) {
+    saveButtonLabel = 'Saving';
+  } else if (currentStatus !== null && !isDirty && initialNote !== null) {
+    saveButtonLabel = 'Saved';
+    isSavedState = true;
+  }
 
   const handleClear = async () => {
     if (isSaving) return;
@@ -46,8 +87,18 @@ export function DayEditor({
           maxLength={200}
           value={note}
           onChange={(e) => setNote(e.target.value)}
+          onKeyDown={handleKeyDown}
           disabled={isSaving}
         />
+        <button
+          type="button"
+          className={`btn-note-save ${isSavedState ? 'is-saved' : ''}`}
+          onClick={handleSaveNote}
+          disabled={!canSaveNote}
+          aria-label={saveButtonLabel}
+        >
+          {saveButtonLabel}
+        </button>
       </div>
 
       <div className="day-editor-actions">
